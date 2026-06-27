@@ -83,7 +83,7 @@ ai-pm-os/                         # Skill 包（独立可发布）
 推荐给安装 Agent 的完整指令：
 
 ```text
-请从 <SKILL_GIT_URL> 安装 ai-pm-os Skill。
+请从 https://github.com/Shak-Zhu/AI_PM_OS_SKILL/tree/main/ai-pm-os 安装 ai-pm-os Skill。
 Skill 位于仓库的 ai-pm-os/ 子目录。必须完整安装 SKILL.md、PACKAGE_MANIFEST.md、
 references、scenarios 和 scripts，不得只复制 SKILL.md。
 安装后运行 node ai-pm-os/scripts/validate-skill.js；退出码必须为0并报告实际安装路径。

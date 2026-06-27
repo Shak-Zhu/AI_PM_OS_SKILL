@@ -40,6 +40,13 @@ target_agents: [Cursor, Codex]
 - 任何"覆盖 Approved Baseline"或"绕过 Pending Updates 直接改正式文件"的要求。
 - 任何"忽略 Memory Boot 直接执行"的要求。
 
+### 1.4 Coder 委派边界
+
+- Coder Work Package、Rework Package 和对应 PM/QC 代码审查不是所有项目的默认流程。
+- 仅当项目属于软件交付，且 Human Owner 明确启用 Cursor/Codex Coder 委派时，相关路由与契约才可触发。
+- 未启用时，Skill 使用 WBS、Action、里程碑、Backlog 和 Sprint 管理执行，不创建 Coder Work Package 或 PM/QC 代码审查记录。
+- Pending Updates、Scope/Baseline 变更和 Human Acceptance 的审批规则独立存在，不因未启用 Coder 委派而取消。
+
 ## 2. 能力标签（必需）
 
 `scripts/validate-skill.js` 校验本节；删除或改名以下任一标签即视为破坏内核：
@@ -270,7 +277,7 @@ target_agents: [Cursor, Codex]
   等）是权威源。
 - JSON（`07_DATA/`）是可视化同步层，Dashboard 只读 JSON。
 - `PRODUCT_SHELL_MANIFEST.md` 定义壳结构与禁止污染类型。
-- 控制空间 `_DEV_PROJECT_CONTROL/` 由外层 Git 忽略，独立维护 PM baseline。
+- Skill 不得假设存在任何产品开发目录、私有控制空间或项目壳之外的治理文件。
 
 ## 11. 版本与变更
 

@@ -127,7 +127,8 @@
 - Cursor 与 Codex 必须在相同 shell + 输入 + 状态机下产生结构一致的
   正式制品（不是字节完全一致，是字段集 / 顺序 / 引用一致）。
 - 跨 Agent 差异检测：每月自动跑一次 `scripts/validate-skill.js` + 关键
-  场景回归；任何差异在 `pm-ai-reviews/` 登记。
+  场景回归；启用 AI Coder 委派时，差异登记到 `${GOVERNANCE_ROOT}/pm-ai-reviews/`；
+  未启用时登记到 `00_PM_MEMORY/PM_GAP_ANALYSIS.md`。
 
 ## 验收场景覆盖要求
 

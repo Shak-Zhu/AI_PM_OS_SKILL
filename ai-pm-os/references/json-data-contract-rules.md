@@ -25,7 +25,7 @@ P0 不要求数据库、API 或后台同步。
 |---|---|---|---|---|---|---|
 | 1 | `actions.json` | object | `actions.schema.json` | `03_MEETINGS/meeting_minutes/*.md` | `action_id` | `status` |
 | 2 | `approvals.json` | object | `approvals.schema.json` | `01_PM_DOCUMENTS/PM_APPROVAL_STATUS.md` | `approval_id` | `status` |
-| 3 | `backlog.json` | object | `backlog.schema.json` | `02_AGILE/PM_BACKLOG.md` | `story_id` | `status` |
+| 3 | `backlog.json` | object | `backlog.schema.json` | `02_AGILE/PM_PRODUCT_BACKLOG.md` | `story_id` | `status` |
 | 4 | `burndown.json` | object | `burndown.schema.json` | `02_AGILE/PM_BURNDOWN_DATA.md` | `sprint_id` | — |
 | 5 | `changes.json` | object | `changes.schema.json` | `01_PM_DOCUMENTS/PM_CHANGE_LOG.md` | `change_id` | `status` |
 | 6 | `daily_briefing.json` | object | `daily_briefing.schema.json` | `00_PM_MEMORY/PM_DAILY_BRIEFING.md` | `date` | — |

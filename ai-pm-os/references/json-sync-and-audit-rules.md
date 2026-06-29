@@ -56,7 +56,7 @@ JSON 是 Markdown 的可视化同步层，Markdown 是权威源。
 | 9 | `07_DATA/decisions.json` | `03_MEETINGS/meeting_minutes/*.md` |
 | 10 | `07_DATA/actions.json` | `03_MEETINGS/meeting_minutes/*.md` |
 | 11 | `07_DATA/todo.json` | `04_TODO/` |
-| 12 | `07_DATA/backlog.json` | `02_AGILE/PM_BACKLOG.md` |
+| 12 | `07_DATA/backlog.json` | `02_AGILE/PM_PRODUCT_BACKLOG.md` |
 | 13 | `07_DATA/sprints.json` | `02_AGILE/PM_SPRINT_BACKLOG.md` |
 | 14 | `07_DATA/burndown.json` | `02_AGILE/PM_BURNDOWN_DATA.md` |
 | 15 | `07_DATA/velocity.json` | `02_AGILE/PM_VELOCITY_LOG.md` |

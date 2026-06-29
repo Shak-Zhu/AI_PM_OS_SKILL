@@ -35,7 +35,7 @@
 | `references/json-data-contract-rules.md` | 26 个 JSON 数据契约、Schema 孤儿检查、P0 限制声明 | 无 |
 | `references/json-sync-and-audit-rules.md` | Markdown→JSON 同步规则、审计契约、Source Map、Fail-Closed 行为 | 无 |
 | `references/memory-and-recovery.md` | 六层信息源、Memory Boot 顺序、Active Context 契约 | 无 |
-| `references/runtime-compliance-contracts.md` | 6 类 Critical Output Contract、10 字段、Pre-send Compliance Gate | 无 |
+| `references/runtime-compliance-contracts.md` | 2 类 Critical Output Contract、10 字段、Pre-send Compliance Gate | 无 |
 | `references/execution-integrity.md` | 执行身份模型、状态机、幂等 PU、部分失败恢复 | 无 |
 | `references/conflict-and-chaos-rules.md` | 四类冲突、六类缺失、五类命名违规、五类脏工作树、Markdown/JSON 冲突方向（C-01~C-04、M-01~M-06、N-01~N-05、D-01~D-05） | 无 |
 | `references/command-and-approval-rules.md` | 三层路由、六 Gate 状态、九审批状态、九类角色权限矩阵、十二 P0 工作流标准对象、未授权请求失败关闭 | 无 |

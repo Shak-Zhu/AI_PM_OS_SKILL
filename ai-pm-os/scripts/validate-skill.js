@@ -4891,6 +4891,75 @@ function checkSemanticInvariant85(baseDir) {
   return errors;
 }
 
+/**
+ * SI-86: workflow path contracts and runtime contract count stay canonical.
+ *
+ * Prevents obsolete shorthand aliases from returning to workflow routing and
+ * keeps the package/stability descriptions aligned with the two runtime COCs.
+ */
+function checkSemanticInvariant86(baseDir) {
+  var errors = [];
+  var commandPath = path.join(baseDir, 'ai-pm-os/references/command-and-approval-rules.md');
+  var stabilityPath = path.join(baseDir, 'ai-pm-os/references/stability-rules.md');
+  var manifestPath = path.join(baseDir, 'ai-pm-os/PACKAGE_MANIFEST.md');
+  var commandSrc = readSafe(commandPath) || '';
+  var stabilitySrc = readSafe(stabilityPath) || '';
+  var manifestSrc = readSafe(manifestPath) || '';
+  var runtimeMarkdownPaths = [
+    commandPath,
+    path.join(baseDir, 'ai-pm-os/references/communication-and-reporting-rules.md'),
+    path.join(baseDir, 'ai-pm-os/references/json-data-contract-rules.md'),
+    path.join(baseDir, 'ai-pm-os/references/json-sync-and-audit-rules.md'),
+    path.join(baseDir, 'ai-pm-os/scenarios/scenarios.md'),
+  ];
+  var runtimeMarkdown = '';
+  for (var r = 0; r < runtimeMarkdownPaths.length; r++) {
+    runtimeMarkdown += '\n' + (readSafe(runtimeMarkdownPaths[r]) || '');
+  }
+
+  var obsoleteAliases = [
+    'PM_DECISIONS_LOG.md',
+    'PM_TODO.md',
+    'PM_ACTIONS_LOG.md',
+    'PM_MEETING_MINUTES.md',
+    'PM_DAILY_REPORTS/',
+    'PM_SPRINT_STATUS.md',
+    'PM_BACKLOG.md',
+    'PM_SCOPE.md',
+  ];
+  for (var i = 0; i < obsoleteAliases.length; i++) {
+    if (runtimeMarkdown.indexOf(obsoleteAliases[i]) !== -1) {
+      errors.push('SI-86a: obsolete runtime path alias remains: ' + obsoleteAliases[i]);
+    }
+  }
+
+  var requiredCanonicalPaths = [
+    '03_MEETINGS/meeting_index/PM_MEETING_INDEX.md',
+    '01_PM_DOCUMENTS/PM_DECISION_LOG.md',
+    '04_TODO/daily/',
+    '01_PM_DOCUMENTS/PM_ACTION_LOG.md',
+    '05_REPORTS/daily/',
+    '02_AGILE/PM_SPRINT_PLAN.md',
+    '02_AGILE/PM_PRODUCT_BACKLOG.md',
+    '01_PM_DOCUMENTS/PM_SCOPE_BASELINE.md',
+    '02_AGILE/PM_SPRINT_BACKLOG.md',
+  ];
+  for (var j = 0; j < requiredCanonicalPaths.length; j++) {
+    if (commandSrc.indexOf(requiredCanonicalPaths[j]) === -1) {
+      errors.push('SI-86b: canonical workflow path missing: ' + requiredCanonicalPaths[j]);
+    }
+  }
+
+  if (stabilitySrc.indexOf('2 类契约、10 字段、8 步门禁') === -1) {
+    errors.push('SI-86c: stability-rules.md must describe exactly 2 runtime contracts');
+  }
+  if (manifestSrc.indexOf('2 类 Critical Output Contract、10 字段') === -1) {
+    errors.push('SI-86d: PACKAGE_MANIFEST.md must describe exactly 2 runtime contracts');
+  }
+
+  return errors;
+}
+
 
 /**
  * SI-59: agile-reporting-rules.md is covered by REQUIRED_FILES
@@ -5606,7 +5675,8 @@ function main() {
   const si83 = checkSemanticInvariant83(baseDir, { skipHostScripts: isIsolated });
   const si84 = checkSemanticInvariant84(baseDir);
   const si85 = checkSemanticInvariant85(baseDir);
-  siErrors.push(...si01, ...si02, ...si03, ...si04, ...si05, ...si06, ...si07, ...si08, ...si09, ...si10, ...si11, ...si12, ...si13, ...si14, ...si15, ...si16, ...si17, ...si18, ...si19, ...si20, ...si21, ...si22, ...si23, ...si24, ...si25, ...si26, ...si27, ...si28, ...si29, ...si30, ...si31, ...si32, ...si33, ...si34, ...si35, ...si36, ...si37, ...si38, ...si39, ...si40, ...si41, ...si42, ...si43, ...si44, ...si45, ...si46, ...si47, ...si48, ...si49, ...si50, ...si51, ...si52, ...si53, ...si54, ...si55, ...si56, ...si57, ...si58, ...si59, ...si60, ...si61, ...si62, ...si63, ...si64, ...si65, ...si67, ...si68, ...si69, ...si70, ...si71, ...si72, ...si73, ...si74, ...si75, ...si76, ...si77, ...si78, ...si79, ...si80, ...si81, ...si82, ...si83, ...si84, ...si85);
+  const si86 = checkSemanticInvariant86(baseDir);
+  siErrors.push(...si01, ...si02, ...si03, ...si04, ...si05, ...si06, ...si07, ...si08, ...si09, ...si10, ...si11, ...si12, ...si13, ...si14, ...si15, ...si16, ...si17, ...si18, ...si19, ...si20, ...si21, ...si22, ...si23, ...si24, ...si25, ...si26, ...si27, ...si28, ...si29, ...si30, ...si31, ...si32, ...si33, ...si34, ...si35, ...si36, ...si37, ...si38, ...si39, ...si40, ...si41, ...si42, ...si43, ...si44, ...si45, ...si46, ...si47, ...si48, ...si49, ...si50, ...si51, ...si52, ...si53, ...si54, ...si55, ...si56, ...si57, ...si58, ...si59, ...si60, ...si61, ...si62, ...si63, ...si64, ...si65, ...si67, ...si68, ...si69, ...si70, ...si71, ...si72, ...si73, ...si74, ...si75, ...si76, ...si77, ...si78, ...si79, ...si80, ...si81, ...si82, ...si83, ...si84, ...si85, ...si86);
 
   // WP-015-R1/R2: Fail-closed isolated skip contract enforcement (QC-F-150, QC-F-154)
   // Scan ALL checkSemanticInvariantNN function bodies for skipHostScripts usage.
@@ -5749,6 +5819,7 @@ function main() {
     }
     console.log('  OK: SI-84 (SC-SYNC-01..12 scenarios exist in scenarios.md) PASS');
     console.log('  OK: SI-85 (SKILL.md + PACKAGE_MANIFEST.md reference json-sync-and-audit-rules.md) PASS');
+    console.log('  OK: SI-86 (workflow paths + runtime contract count are canonical) PASS');
   } else {
     for (const e of siErrors) {
       console.log('  SEMANTIC VIOLATION: ' + e);

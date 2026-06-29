@@ -524,7 +524,7 @@
   5. Skill 不得将 US-030 纳入 Sprint Planning，直至所有缺口被 PO 关闭。
 - **Allow**: 写 Gap、分析报告。
 - **Forbid**: 不得伪造缺失字段；不得在缺口未关闭时将 US-030 纳入 Sprint。
-- **Evidence**: 00_PM_MEMORY/PM_GAP_ANALYSIS.md、02_AGILE/PM_BACKLOG.md。
+- **Evidence**: 00_PM_MEMORY/PM_GAP_ANALYSIS.md、02_AGILE/PM_PRODUCT_BACKLOG.md。
 
 ## 31. 框架自动选择：Kanban（无用户指定）
 

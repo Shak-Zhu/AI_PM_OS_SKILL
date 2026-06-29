@@ -80,9 +80,9 @@ Layer 3: Gate Evaluation
 |---|---|
 | `workflow_id` | INIT |
 | `trigger` | 初始化 / initialize / 启动项目 / init / initialize project |
-| `required_reads` | Memory Index；Scope Baseline（若存在）；PM_ROLE_CONFIG.md |
-| `preflight_gates` | Scope Baseline 不存在或状态为 Draft；PM_ROLE_CONFIG.md 可读 |
-| `allowed_outputs` | Project Brief（Draft）；PM_ROLE_CONFIG.md（若不存在）；00_PM_MEMORY/PM_MEMORY_INDEX.md |
+| `required_reads` | `00_PM_MEMORY/PM_MEMORY_INDEX.md`；`01_PM_DOCUMENTS/PM_SCOPE_BASELINE.md`（若存在）；`00_PM_MEMORY/PM_ROLE_CONFIG.md` |
+| `preflight_gates` | `01_PM_DOCUMENTS/PM_SCOPE_BASELINE.md` 不存在或状态为 Draft；`00_PM_MEMORY/PM_ROLE_CONFIG.md` 可读 |
+| `allowed_outputs` | `01_PM_DOCUMENTS/PM_PROJECT_BRIEF.md`（Draft）；`00_PM_MEMORY/PM_ROLE_CONFIG.md`（若不存在）；`00_PM_MEMORY/PM_MEMORY_INDEX.md` |
 | `forbidden_outputs` | Scope Baseline（Approved 状态）；正式 WBS；已批准的 Project Brief |
 | `failure_state` | gate_failed |
 
@@ -92,10 +92,10 @@ Layer 3: Gate Evaluation
 |---|---|
 | `workflow_id` | INTAKE |
 | `trigger` | 处理新材料 / process material / intake / intake material |
-| `required_reads` | PM_INPUT_LOG.md；PM_ACTIVE_CONTEXT.md；PM_RAID_LOG.md |
-| `preflight_gates` | PM_INPUT_LOG.md 可写；PM_ACTIVE_CONTEXT.md 可读 |
-| `allowed_outputs` | PM_INPUT_LOG.md（追加条目）；PM_RAID_LOG.md（追加 Action/Risk）；PM_GAP_ANALYSIS.md（Gap 条目） |
-| `forbidden_outputs` | 正式 Scope Baseline；PM_PENDING_UPDATES.md（INTAKE 本身不产生 PU，需 APPLY）|
+| `required_reads` | `00_PM_MEMORY/PM_INPUT_LOG.md`；`00_PM_MEMORY/PM_ACTIVE_CONTEXT.md`；`01_PM_DOCUMENTS/PM_RAID_LOG.md` |
+| `preflight_gates` | `00_PM_MEMORY/PM_INPUT_LOG.md` 可写；`00_PM_MEMORY/PM_ACTIVE_CONTEXT.md` 可读 |
+| `allowed_outputs` | `00_PM_MEMORY/PM_INPUT_LOG.md`（追加条目）；`01_PM_DOCUMENTS/PM_RAID_LOG.md`（追加 Action/Risk）；`00_PM_MEMORY/PM_GAP_ANALYSIS.md`（Gap 条目） |
+| `forbidden_outputs` | 正式 Scope Baseline；`00_PM_MEMORY/PM_PENDING_UPDATES.md`（INTAKE 本身不产生 PU，需 APPLY）|
 | `failure_state` | gate_failed |
 
 ### WF-03: MEETING
@@ -104,9 +104,9 @@ Layer 3: Gate Evaluation
 |---|---|
 | `workflow_id` | MEETING |
 | `trigger` | 处理 transcript / meeting transcript / 会议纪要 / meeting notes |
-| `required_reads` | PM_MEETING_INDEX.md；PM_RAID_LOG.md；PM_DECISIONS_LOG.md；PM_PENDING_UPDATES.md |
-| `preflight_gates` | PM_MEETING_INDEX.md 可写；PM_RAID_LOG.md 可读 |
-| `allowed_outputs` | PM_MEETING_INDEX.md（追加条目）；PM_RAID_LOG.md（追加 Action/Risk）；PM_DECISIONS_LOG.md（追加 Decision）；PM_PENDING_UPDATES.md（新增 PU） |
+| `required_reads` | `03_MEETINGS/meeting_index/PM_MEETING_INDEX.md`；`01_PM_DOCUMENTS/PM_RAID_LOG.md`；`01_PM_DOCUMENTS/PM_DECISION_LOG.md`；`00_PM_MEMORY/PM_PENDING_UPDATES.md` |
+| `preflight_gates` | `03_MEETINGS/meeting_index/PM_MEETING_INDEX.md` 可写；`01_PM_DOCUMENTS/PM_RAID_LOG.md` 可读 |
+| `allowed_outputs` | `03_MEETINGS/meeting_minutes/YYYY-MM-DD_HHMM_MEETING_MINUTES_<topic>.md`；`03_MEETINGS/meeting_index/PM_MEETING_INDEX.md`（追加条目）；`01_PM_DOCUMENTS/PM_RAID_LOG.md`（追加 Action/Risk）；`01_PM_DOCUMENTS/PM_DECISION_LOG.md`（追加 Decision）；`00_PM_MEMORY/PM_PENDING_UPDATES.md`（新增 PU） |
 | `forbidden_outputs` | 直接修改已批准的 Scope Baseline；跳过 PU 直接写入正式文件 |
 | `failure_state` | gate_failed |
 
@@ -116,9 +116,9 @@ Layer 3: Gate Evaluation
 |---|---|
 | `workflow_id` | BRIEFING |
 | `trigger` | 今日 briefing / what should I do / 今日工作 / daily briefing |
-| `required_reads` | PM_CURRENT_STATUS.md；PM_TODO.md；PM_RAID_LOG.md；PM_APPROVAL_STATUS.md |
-| `preflight_gates` | PM_CURRENT_STATUS.md 可读 |
-| `allowed_outputs` | Briefing 文件（Draft）；PM_TODO.md（更新）；PM_GAP_ANALYSIS.md |
+| `required_reads` | `00_PM_MEMORY/PM_CURRENT_STATUS.md`；`04_TODO/daily/` 最新条目（若存在）；`01_PM_DOCUMENTS/PM_RAID_LOG.md`；`00_PM_MEMORY/PM_APPROVAL_STATUS.md` |
+| `preflight_gates` | `00_PM_MEMORY/PM_CURRENT_STATUS.md` 可读 |
+| `allowed_outputs` | `00_PM_MEMORY/PM_DAILY_BRIEFING.md`（Draft）；`04_TODO/daily/YYYY-MM-DD_TODO.md`；`00_PM_MEMORY/PM_GAP_ANALYSIS.md` |
 | `forbidden_outputs` | Scope Baseline 修改；正式审批文件；直接写入 Approved 状态 |
 | `failure_state` | gate_failed |
 
@@ -128,9 +128,9 @@ Layer 3: Gate Evaluation
 |---|---|
 | `workflow_id` | TODO |
 | `trigger` | 生成 To-do / todo / 今日 To-do / update todo |
-| `required_reads` | PM_TODO.md（昨日/今日）；PM_RAID_LOG.md；PM_ACTIONS_LOG.md；PM_APPROVAL_STATUS.md |
-| `preflight_gates` | PM_TODO.md 可写；当前日期可定位 |
-| `allowed_outputs` | PM_TODO.md（更新）；PM_RAID_LOG.md（新增 Action） |
+| `required_reads` | `04_TODO/daily/` 昨日/今日条目（若存在）；`01_PM_DOCUMENTS/PM_RAID_LOG.md`；`01_PM_DOCUMENTS/PM_ACTION_LOG.md`；`00_PM_MEMORY/PM_APPROVAL_STATUS.md` |
+| `preflight_gates` | `04_TODO/daily/` 可创建或可写；当前日期可定位 |
+| `allowed_outputs` | `04_TODO/daily/YYYY-MM-DD_TODO.md`；`01_PM_DOCUMENTS/PM_ACTION_LOG.md`（新增或更新 Action） |
 | `forbidden_outputs` | 跨日 TODO 自动归档（必须保留来源）；跳过 Active Context 直接写 Approved |
 | `failure_state` | gate_failed |
 
@@ -140,9 +140,9 @@ Layer 3: Gate Evaluation
 |---|---|
 | `workflow_id` | APPLY |
 | `trigger` | 应用 PU / apply pending update / 批准 / approve |
-| `required_reads` | PM_PENDING_UPDATES.md；Approved Baseline（相关文件）；Git 工作树状态 |
-| `preflight_gates` | PM_PENDING_UPDATES.md 至少 1 条 Proposed PU；Git 工作树允许创建 checkpoint（dirty 但无冲突）|
-| `allowed_outputs` | PM_PENDING_UPDATES.md（状态变更为 Approved/Applied）；正式文件（按 PU 内容）；Git checkpoint |
+| `required_reads` | `00_PM_MEMORY/PM_PENDING_UPDATES.md`；Approved Baseline（相关文件）；Git 工作树状态 |
+| `preflight_gates` | `00_PM_MEMORY/PM_PENDING_UPDATES.md` 至少 1 条 Proposed PU；Git 工作树允许创建 checkpoint（dirty 但无冲突）|
+| `allowed_outputs` | `00_PM_MEMORY/PM_PENDING_UPDATES.md`（状态变更为 Approved/Applied）；正式文件（按 PU 内容）；Git checkpoint |
 | `forbidden_outputs` | 未批准 PU 的任何正式文件写入；跳过 preflight 直接写入 Approved Baseline；跳过 checkpoint |
 | `failure_state` | gate_failed 或 blocked_by_dirty_worktree |
 
@@ -152,9 +152,9 @@ Layer 3: Gate Evaluation
 |---|---|
 | `workflow_id` | REPORT_DAILY |
 | `trigger` | 日报 / daily report / 今日报告 |
-| `required_reads` | PM_TODO.md；PM_ACTIONS_LOG.md；PM_MEETING_MINUTES.md；PM_RAID_LOG.md |
+| `required_reads` | `04_TODO/daily/YYYY-MM-DD_TODO.md`（若存在）；`01_PM_DOCUMENTS/PM_ACTION_LOG.md`；`03_MEETINGS/meeting_minutes/` 当日纪要（若存在）；`01_PM_DOCUMENTS/PM_RAID_LOG.md` |
 | `preflight_gates` | 当日有已批准 Action 或 Decision 或 Meeting Minutes |
-| `allowed_outputs` | PM_DAILY_REPORT_YYYYMMDD.md（Draft）；PM_GAP_ANALYSIS.md |
+| `allowed_outputs` | `05_REPORTS/daily/YYYY-MM-DD_DAILY_REPORT.md`（Draft）；`00_PM_MEMORY/PM_GAP_ANALYSIS.md` |
 | `forbidden_outputs` | 历史日报覆盖修改；编造不存在的 Action；直接写入 Approved Baseline |
 | `failure_state` | gate_failed |
 
@@ -164,9 +164,9 @@ Layer 3: Gate Evaluation
 |---|---|
 | `workflow_id` | REPORT_WEEKLY |
 | `trigger` | 周报 / weekly report / 本周报告 |
-| `required_reads` | PM_DAILY_REPORTS/（周内日报）；PM_ACTIONS_LOG.md；PM_RAID_LOG.md；PM_SPRINT_STATUS.md（若存在）|
+| `required_reads` | `05_REPORTS/daily/` 周内日报；`01_PM_DOCUMENTS/PM_ACTION_LOG.md`；`01_PM_DOCUMENTS/PM_RAID_LOG.md`；`02_AGILE/PM_SPRINT_PLAN.md` 与 `02_AGILE/PM_SPRINT_BACKLOG.md`（若存在活跃 Sprint）|
 | `preflight_gates` | 周内有至少 1 份日报或 3 个 Action |
-| `allowed_outputs` | PM_WEEKLY_REPORT_YYYY-WNN.md（Draft）；PM_GAP_ANALYSIS.md |
+| `allowed_outputs` | `05_REPORTS/weekly/YYYY-MM-DD_to_YYYY-MM-DD_WEEKLY_REPORT.md`（Draft）；`00_PM_MEMORY/PM_GAP_ANALYSIS.md` |
 | `forbidden_outputs` | 跨周修改日报内容；编造 Velocity 数据；直接写入 Scope Baseline |
 | `failure_state` | gate_failed |
 
@@ -188,9 +188,9 @@ Layer 3: Gate Evaluation
 |---|---|
 | `workflow_id` | TAKEOVER |
 | `trigger` | 接管 / takeover / 接手 / 接手这个项目 |
-| `required_reads` | PM_MEMORY_INDEX.md；PM_RAID_LOG.md；PM_DECISIONS_LOG.md；PM_BACKLOG.md |
-| `preflight_gates` | PM_MEMORY_INDEX.md 可读 |
-| `allowed_outputs` | PM_TAKEOVER_ASSESSMENT.md（Draft）；PM_GAP_ANALYSIS.md；PM_DOCUMENT_REGISTRY.md |
+| `required_reads` | `00_PM_MEMORY/PM_MEMORY_INDEX.md`；`01_PM_DOCUMENTS/PM_RAID_LOG.md`；`01_PM_DOCUMENTS/PM_DECISION_LOG.md`；`02_AGILE/PM_PRODUCT_BACKLOG.md` |
+| `preflight_gates` | `00_PM_MEMORY/PM_MEMORY_INDEX.md` 可读 |
+| `allowed_outputs` | `01_PM_DOCUMENTS/PM_TAKEOVER_ASSESSMENT.md`（Draft）；`00_PM_MEMORY/PM_GAP_ANALYSIS.md`；`00_PM_MEMORY/PM_DOCUMENT_REGISTRY.md` |
 | `forbidden_outputs` | 接管评估期间修改已批准 Baseline；直接进入 Sprint；直接生成 Approved Scope |
 | `failure_state` | gate_failed |
 
@@ -200,9 +200,9 @@ Layer 3: Gate Evaluation
 |---|---|
 | `workflow_id` | AUDIT |
 | `trigger` | 审计 / audit / 检查项目状态 |
-| `required_reads` | PM_SCOPE.md；PM_PENDING_UPDATES.md；PM_RAID_LOG.md；PM_SPRINT_STATUS.md |
-| `preflight_gates` | PM_MEMORY_INDEX.md 可读 |
-| `allowed_outputs` | PM_AUDIT_REPORT.md（Draft）；PM_GAP_ANALYSIS.md；PM_PENDING_UPDATES.md（新增 Issue） |
+| `required_reads` | `01_PM_DOCUMENTS/PM_SCOPE_BASELINE.md`；`00_PM_MEMORY/PM_PENDING_UPDATES.md`；`01_PM_DOCUMENTS/PM_RAID_LOG.md`；`02_AGILE/PM_SPRINT_PLAN.md` 与 `02_AGILE/PM_SPRINT_BACKLOG.md`（若存在） |
+| `preflight_gates` | `00_PM_MEMORY/PM_MEMORY_INDEX.md` 可读 |
+| `allowed_outputs` | `01_PM_DOCUMENTS/PM_AUDIT_REPORT.md`（Draft）；`00_PM_MEMORY/PM_GAP_ANALYSIS.md`；`00_PM_MEMORY/PM_PENDING_UPDATES.md`（新增 Issue） |
 | `forbidden_outputs` | 审计报告本身写入 Approved Baseline；跳过 Gap 直接修改 Scope；自动批准 PU |
 | `failure_state` | gate_failed |
 
@@ -212,9 +212,9 @@ Layer 3: Gate Evaluation
 |---|---|
 | `workflow_id` | AGILE |
 | `trigger` | 敏捷 / agile / scrum / kanban / sprint / backlog / DoR / DoD / WIP |
-| `required_reads` | PM_BACKLOG.md；PM_SPRINT_BACKLOG.md；agile-delivery-rules.md |
+| `required_reads` | `02_AGILE/PM_PRODUCT_BACKLOG.md`；`02_AGILE/PM_SPRINT_BACKLOG.md`；`ai-pm-os/references/agile-delivery-rules.md` |
 | `preflight_gates` | 有活跃项目上下文（Backlog 或 Sprint 文件存在）；Backlog 可写 |
-| `allowed_outputs` | PM_BACKLOG.md；PM_SPRINT_BACKLOG.md；PM_GAP_ANALYSIS.md |
+| `allowed_outputs` | `02_AGILE/PM_PRODUCT_BACKLOG.md`；`02_AGILE/PM_SPRINT_BACKLOG.md`；`00_PM_MEMORY/PM_GAP_ANALYSIS.md` |
 | `forbidden_outputs` | 未批准 Story 进入 Sprint Backlog（committed）；跳过 DoR 直接 committed；跳过 DoD 直接 done |
 | `failure_state` | gate_failed |
 

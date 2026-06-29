@@ -53,7 +53,7 @@
 
 | 文件 | 用途 | 说明 |
 |---|---|---|
-| `scripts/validate-skill.js` | SI-01~SI-85 机器可验证规则；自包含运行（无外部包依赖）；支持隔离模式（无宿主文件时跳过 AGENTS.md/_AI_GLOBAL_MEMORY/ 检查） | 唯一验证实现 |
+| `scripts/validate-skill.js` | SI-01~SI-85（包含 SI-14b CHG-011 Applicability Gate）机器可验证规则；自包含运行（无外部包依赖）；支持隔离模式（无宿主文件时跳过 AGENTS.md/_AI_GLOBAL_MEMORY/ 检查） | 唯一验证实现 |
 
 **注意**：`scripts/check-pollution.js` 不属于包内文件；它是完整项目壳的仓库 QA 适配器，不在独立 Skill 包安装范围内。
 

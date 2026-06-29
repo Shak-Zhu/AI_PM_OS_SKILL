@@ -2017,6 +2017,115 @@ function checkPackageSelfContainment(baseDir, opts) {
  *   - source_fingerprint lacks SHA-256
  *   - §0.2 "same operation" judgment missing
  */
+/**
+ * SI-14b: COC Applicability Gate (CHG-011) — R1-AC-09 fix
+ *
+ * Precisely verifies runtime-compliance-contracts.md contains:
+ *   (a) <!-- SECTION:CODER_APPLICABILITY --> anchor
+ *   (b) ## 8. CHG-011 heading (section anchor)
+ *   (c) §8.1 applicability table with exactly 4 rows for:
+ *         COC-CWP-001, COC-RWP-002, COC-PQR-003, COC-HAR-006
+ *   (d) fail-closed behavior: "不得创建" + "治理根目录" in §8.2
+ *   (e) escalation: "Escalation:" + "coder-delegation-not-authorized" in §8.2
+ *
+ * FAILS when:
+ *   - Section anchor missing
+ *   - §8 heading missing
+ *   - Table header row missing
+ *   - Any of the 4 required COC IDs missing from table
+ *   - Any COC ID appears more than once in table (duplicate row)
+ *   - Total COC row count is not exactly 4 (extra unknown rows)
+ *   - Any unknown/extra COC ID found in table
+ *   - Fail-closed behavior text reversed (e.g., "创建${GOVERNANCE_ROOT}" without negation)
+ */
+function checkSemanticInvariant14b(baseDir) {
+  const rccPath = path.join(baseDir, 'ai-pm-os', 'references', 'runtime-compliance-contracts.md');
+  const rccContent = readSafe(rccPath) || '';
+  const errors = [];
+
+  // (a) Verify section anchor
+  if (!/<!--\s*SECTION:CODER_APPLICABILITY\s*-->/.test(rccContent)) {
+    errors.push('SI-14b-a: missing <!-- SECTION:CODER_APPLICABILITY --> anchor');
+  }
+
+  // (b) Verify §8 heading
+  if (!/##\s*8\.\s*CHG-011\s*—\s*AI\s+Coder\s+委派\s+Applicability\s+Gate/.test(rccContent)) {
+    errors.push('SI-14b-b: missing "## 8. CHG-011 — AI Coder 委派 Applicability Gate" heading');
+  }
+
+  // (c) Extract §8 section content (from anchor to next major heading or end)
+  const secMatch = rccContent.match(/<!--\s*SECTION:CODER_APPLICABILITY\s*-->[\s\S]*?(?=<!--\s*END:SECTION:CODER_APPLICABILITY\s*-->|$)(<!--\s*END:SECTION:CODER_APPLICABILITY\s*-->)?/);
+  if (!secMatch) {
+    errors.push('SI-14b-c: could not extract §8 section content');
+    return errors;
+  }
+  const secContent = secMatch[0];
+
+  // (d) Verify table header row for §8.1
+  if (!/^\|\s*contract_id\s*\|[^\n]*触发条件[^\n]*未启用时行为/m.test(secContent)) {
+    errors.push('SI-14b-d: §8.1 applicability table header row missing or malformed (expected "| contract_id | 触发条件 | 未启用时行为 |")');
+  }
+
+  // (e) Parse table rows and verify exactly 4 COC entries, no duplicates, no unknown rows
+  const requiredCOCs = ['COC-CWP-001', 'COC-RWP-002', 'COC-PQR-003', 'COC-HAR-006'];
+  const foundCOCs = {};
+  for (const cocId of requiredCOCs) { foundCOCs[cocId] = 0; }
+
+  // Match table rows: lines that start with | followed by backtick-enclosed COC ID
+  const tableRowRe = /^\|\s*`([^`]+)`\s*\|/gm;
+  tableRowRe.lastIndex = 0; // R2 fix (QC-F-197): reset lastIndex — global regex state persists across calls
+  let rowMatch;
+  const allTableCOCs = []; // R2 fix (QC-F-197): track ALL COCs found for row count check
+  while ((rowMatch = tableRowRe.exec(secContent)) !== null) {
+    const cell = rowMatch[1].trim();
+    allTableCOCs.push(cell); // R2 fix (QC-F-197): collect all COC IDs
+    if (requiredCOCs.indexOf(cell) !== -1) {
+      foundCOCs[cell]++;
+    }
+  }
+
+  // R2 fix (QC-F-197): Enforce exactly 4 rows (required COCs only, no extra/unknown)
+  // Unknown COC IDs (not in requiredCOCs) are also rejected
+  for (const cell of allTableCOCs) {
+    if (requiredCOCs.indexOf(cell) === -1) {
+      errors.push('SI-14b-e: unknown/extra COC ID "' + cell + '" found in §8.1 applicability table (only ' + requiredCOCs.join(', ') + ' are allowed)');
+    }
+  }
+
+  // R2 fix (QC-F-197): Enforce exactly 4 total rows (no extras beyond the 4 required COCs)
+  if (allTableCOCs.length !== 4) {
+    errors.push('SI-14b-e: §8.1 applicability table has ' + allTableCOCs.length + ' COC rows, must be exactly 4');
+  }
+
+  for (const cocId of requiredCOCs) {
+    if (foundCOCs[cocId] === 0) {
+      errors.push('SI-14b-e: COC ID "' + cocId + '" missing from §8.1 applicability table');
+    } else if (foundCOCs[cocId] > 1) {
+      errors.push('SI-14b-e: COC ID "' + cocId + '" appears ' + foundCOCs[cocId] + ' times in §8.1 table (duplicate row)');
+    }
+  }
+
+  // (f) Verify fail-closed behavior: "不得创建" + "治理根目录" or "pm-ai-work-packages"
+  const failClosedRe = /不得\s*创建.*(?:治理根目录|pm-ai-work-packages)/i;
+  if (!failClosedRe.test(secContent)) {
+    errors.push('SI-14b-f: §8.2 fail-closed behavior "不得创建...治理根目录/pm-ai-work-packages" not found in section 8');
+  }
+
+  // (g) Verify escalation message
+  if (!/Escalation:.*coder-delegation-not-authorized/i.test(secContent)) {
+    errors.push('SI-14b-g: "Escalation: coder-delegation-not-authorized" not found in section 8');
+  }
+
+  // (h) Detect reversed semantics: "创建${GOVERNANCE_ROOT}/pm-ai-work-packages/" WITHOUT negation
+  // Look for the forbidden pattern (creating governance root without "不得" or "不创建" negation)
+  const reversedRe = /(?:^|[^不])创建\s*\$\{GOVERNANCE_ROOT\}\/pm-ai-work-packages|^创建(?:(?!不得|不创建)).*pm-ai-work-packages/ism;
+  if (reversedRe.test(secContent)) {
+    errors.push('SI-14b-h: authorization semantics appear reversed — "创建" without negation found in section 8');
+  }
+
+  return errors;
+}
+
 function checkSemanticInvariant15(baseDir) {
   const eiPath = path.join(baseDir, 'ai-pm-os', 'references', 'execution-integrity.md');
   const eiContent = readSafe(eiPath) || '';
@@ -5929,6 +6038,7 @@ function main() {
   const si12 = checkSemanticInvariant12(baseDir);
   const si13 = checkSemanticInvariant13(baseDir);
   const si14 = checkSemanticInvariant14(baseDir);
+  const si14b = checkSemanticInvariant14b(baseDir);
   const si15 = checkSemanticInvariant15(baseDir);
   const si16 = checkSemanticInvariant16(baseDir);
   const si17 = checkSemanticInvariant17(baseDir);
@@ -5999,7 +6109,7 @@ function main() {
   const si83 = checkSemanticInvariant83(baseDir, { skipHostScripts: isIsolated });
   const si84 = checkSemanticInvariant84(baseDir);
   const si85 = checkSemanticInvariant85(baseDir);
-  siErrors.push(...si01, ...si02, ...si03, ...si04, ...si05, ...si06, ...si07, ...si08, ...si09, ...si10, ...si11, ...si12, ...si13, ...si14, ...si15, ...si16, ...si17, ...si18, ...si19, ...si20, ...si21, ...si22, ...si23, ...si24, ...si25, ...si26, ...si27, ...si28, ...si29, ...si30, ...si31, ...si32, ...si33, ...si34, ...si35, ...si36, ...si37, ...si38, ...si39, ...si40, ...si41, ...si42, ...si43, ...si44, ...si45, ...si46, ...si47, ...si48, ...si49, ...si50, ...si51, ...si52, ...si53, ...si54, ...si55, ...si56, ...si57, ...si58, ...si59, ...si60, ...si61, ...si62, ...si63, ...si64, ...si65, ...si67, ...si68, ...si69, ...si70, ...si71, ...si72, ...si73, ...si74, ...si75, ...si76, ...si77, ...si78, ...si79, ...si80, ...si81, ...si82, ...si83, ...si84, ...si85);
+  siErrors.push(...si01, ...si02, ...si03, ...si04, ...si05, ...si06, ...si07, ...si08, ...si09, ...si10, ...si11, ...si12, ...si13, ...si14, ...si14b, ...si15, ...si16, ...si17, ...si18, ...si19, ...si20, ...si21, ...si22, ...si23, ...si24, ...si25, ...si26, ...si27, ...si28, ...si29, ...si30, ...si31, ...si32, ...si33, ...si34, ...si35, ...si36, ...si37, ...si38, ...si39, ...si40, ...si41, ...si42, ...si43, ...si44, ...si45, ...si46, ...si47, ...si48, ...si49, ...si50, ...si51, ...si52, ...si53, ...si54, ...si55, ...si56, ...si57, ...si58, ...si59, ...si60, ...si61, ...si62, ...si63, ...si64, ...si65, ...si67, ...si68, ...si69, ...si70, ...si71, ...si72, ...si73, ...si74, ...si75, ...si76, ...si77, ...si78, ...si79, ...si80, ...si81, ...si82, ...si83, ...si84, ...si85);
 
   // WP-015-R1/R2: Fail-closed isolated skip contract enforcement (QC-F-150, QC-F-154)
   // Scan ALL checkSemanticInvariantNN function bodies for skipHostScripts usage.

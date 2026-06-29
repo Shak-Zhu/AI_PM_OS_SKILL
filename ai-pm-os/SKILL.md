@@ -9,8 +9,7 @@ description: |
   编排本地 Markdown 权威项目文件、JSON 可视化同步层与 React/Vite Dashboard
   的持续治理。它不是普通 prompt、写作助手或命令集合；它是可重复执行、
   可中断恢复、跨 Agent 一致的项目管理操作内核。
-owner: PM AI
-target_agents: [Cursor, Codex]
+owner: Project Manager
 ---
 
 # ai-pm-os Skill
@@ -39,13 +38,6 @@ target_agents: [Cursor, Codex]
 - 跨项目组合管理、第三方 PM 工具集成。
 - 任何"覆盖 Approved Baseline"或"绕过 Pending Updates 直接改正式文件"的要求。
 - 任何"忽略 Memory Boot 直接执行"的要求。
-
-### 1.4 Coder 委派边界
-
-- Coder Work Package、Rework Package 和对应 PM/QC 代码审查不是所有项目的默认流程。
-- 仅当项目属于软件交付，且 Human Owner 明确启用 Cursor/Codex Coder 委派时，相关路由与契约才可触发。
-- 未启用时，Skill 使用 WBS、Action、里程碑、Backlog 和 Sprint 管理执行，不创建 Coder Work Package 或 PM/QC 代码审查记录。
-- Pending Updates、Scope/Baseline 变更和 Human Acceptance 的审批规则独立存在，不因未启用 Coder 委派而取消。
 
 ## 2. 能力标签（必需）
 
@@ -141,9 +133,9 @@ target_agents: [Cursor, Codex]
 - **L1 / 对话澄清**：仅缺信息，缺字段，可继续。
 - **L2 / Pending Update**：可能影响 Scope / Decision / RAID / Change / Sprint，
   必须进入 `PM_PENDING_UPDATES.md` 并立即对话确认。
-- **L3 / Human Owner**：触及 Approved Baseline、跨基线变更、跨 Role 责任。
+- **L3 / Project Owner 升级**：触及 Approved Baseline、跨基线变更、跨 Role 责任。
 - **L4 / 停止执行**：不可恢复（重复初始化损坏、无法读取材料、Scope 与
-  已批准 WBS 强冲突等）→ 写入 `PM_GAP_ANALYSIS.md` 并停下，等待 PM AI 决定。
+  已批准 WBS 强冲突等）→ 写入 `PM_GAP_ANALYSIS.md` 并停下，等待 Project Manager 决定。
 
 ### 5.3 中断恢复
 
@@ -180,63 +172,9 @@ target_agents: [Cursor, Codex]
   Skill 必须识别、记录 Gap/Issue/Conflict 并阻断写入，不得自动合并或编造。
   详见 `references/conflict-and-chaos-rules.md`（C-01~C-04、M-01~M-06、N-01~N-05、D-01~D-05）。
 
-## 6b. Critical Output Contract（REQ-035 / WP-017）
-
-关键输出在发送前必须命中 `references/runtime-compliance-contracts.md` 中的契约，并完成 Pre-send Compliance Gate；删除或弱化任一字段视为破坏内核。
-
-### 6b.1 6 类关键输出契约
-
-| 编号 | 契约 | 触发 |
-|---|---|---|
-| COC-CWP-001 | Coder Work Package | PM AI 签发工作包给 Coder |
-| COC-RWP-002 | Rework Package | QC 报告 L3 rework required |
-| COC-PQR-003 | PM/QC Report | PM/QC 完成对一个 WP 的独立验收 |
-| COC-CAR-004 | Change / Approval Request | 用户提出 Scope / Baseline 变更请求 |
-| COC-PUA-005 | Pending Updates Approval Request | Skill 生成 Pending Update 后请求批准 |
-| COC-HAR-006 | Human Acceptance Request | Coder + PM/QC 均通过后请求 Human 验收 |
-
-每个契约具备 10 个字段：`contract_id` / `trigger` / `required_reads` / `required_sections` / `required_file_write` / `required_chat_delivery` / `abbreviation_exception` / `forbidden_shortcuts` / `evidence` / `fail_closed_behavior`。
-
-### 6b.2 Pre-send Compliance Gate（8 步）
-
-发送前必须按 8 步顺序检查，任一失败 → 停止发送制品 → 记录 Escalation + Gap：
-
-1. 意图与契约匹配
-2. Required Project Files 读取证据
-3. 必需章节完整
-4. 权威文件落盘
-5. 聊天交付模式
-6. 规范化一致性
-7. 禁止项未触发
-8. PASS/FAIL 证据
-
-### 6b.3 关键语义
-
-- `one-click-copy` = `完整正文单代码块`；不等于 path-only。
-- `path-only` 仅在 Human Owner 当前消息**显式**要求短指针时允许。
-- 三种非授权表达：`简洁` / `赶快` / `一键复制` 均不构成 path-only 授权。
-- 双输出事务：文件落盘 + 聊天全文必须同时成功；任一失败即交付失败。
-- 错误成功状态：不得在缺字段、缺渠道或授权不明时输出 `issued` / `accepted` / `complete` / `done` / `finished`。
-- 上下文压缩后必须重新读取契约来源；不得依赖聊天记忆替代正式规则。
-- 验证器 `SI-14` 机器检查契约和门禁；任一不通过即退出非 0。
-
-### 6c. 前置门禁与审批状态机（WP-007 / REQ-005、REQ-006、REQ-009）
-
-完整定义见 `references/command-and-approval-rules.md`：
-
-- **三层路由**：Intent Classification → Workflow Selection → Gate Evaluation。
-- **6 个 Gate 结果状态**：gate_passed、gate_failed、approval_required、blocked_by_conflict、blocked_by_dirty_worktree、unrouted_intent。
-- **9 个审批状态**：Draft、Proposed、Pending Review、Approved、Rejected、Superseded、Applied、Human Accepted、Parked。
-- **9 类角色**：PM Owner、Human Owner、PM Reviewer、Sponsor Approver、Product Owner、Tech Owner、Business Owner、Agile Owner、UAT Owner。
-- **12 个 P0 工作流**：INIT、INTAKE、MEETING、BRIEFING、TODO、APPLY、REPORT_DAILY、REPORT_WEEKLY、REPORT_STEERING、TAKEOVER、AUDIT、AGILE。
-- **INIT/INTAKE/APPLY/TAKEOVER/AUDIT 详细行为规则**：含 P0/P1 边界、失败升级、禁止动作，见 `references/project-workflow-rules.md`。
-- **BRIEFING/MEETING/TODO/REPORT_DAILY/REPORT_PERIODIC/REPORT_STEERING 详细行为规则**：含 9 字段定义、质量检查、事实来源禁止编造规则，见 `references/communication-and-reporting-rules.md`。
-- **个人默认角色**：单人用户默认承担 PM Owner、Human Owner、PM Reviewer、Sponsor Approver；规则支持未来拆分。
-- **Fail-Closed**：跳过审批/前置门/直接写 Approved Baseline/直接进入 Sprint 均阻断。
-
 ## 7. 行为场景
 
-≥146 个 Given / When / Then 行为场景见 `scenarios/scenarios.md`，覆盖：
+≥138 个 Given / When / Then 行为场景见 `scenarios/scenarios.md`，覆盖：
 
 - 4 个专业框架组合（PMBOK / PRINCE2 / APM / PMO / Scrum / Kanban / Hybrid）
 - 4 个审批与权限（PU 绕过、Approved Baseline 覆盖、Sprint / Scope 冲突、Owner 缺失）
@@ -244,7 +182,6 @@ target_agents: [Cursor, Codex]
 - 4 个重复与恢复（同一初始化 3 次、重复 transcript、Missing 材料、中断恢复）
 - 4 个跨 Agent 与输出一致性
 - 4 个 Memory / Recovery 场景
-- 8 个 Critical Output Contract 场景（SC-COC-01~08）
 - 10 个执行完整性场景（SC-EI-01~10，幂等、重放、检查点、部分失败恢复）
 - 10 个冲突治理场景（SC-CHX-01~10）
 - 10 个命令路由场景（SC-CMD-01~10）
@@ -253,7 +190,7 @@ target_agents: [Cursor, Codex]
 - 12 个 JSON/Schema 数据契约场景（SC-DATA-01~12）
 - 12 个 JSON 同步与审计场景（SC-SYNC-01~12，Markdown→JSON 同步、幂等性、审计、禁止 watcher）
 
-合计 146 个场景。
+合计 138 个场景。
 
 敏捷数据模型契约（DoR/DoD/Story Point/Backlog/Sprint 等）详见 `references/agile-data-model-rules.md`。JSON 数据契约与 schema 规则详见 `references/json-data-contract-rules.md`。JSON 同步与审计规则详见 `references/json-sync-and-audit-rules.md`。
 

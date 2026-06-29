@@ -128,7 +128,7 @@ Skill **只有**在以下实质歧义时才请求业务澄清：
 - 关键字不在 §1：进入 `Gap：unrouted intent`，输出三选项：
   1. 由用户重新表述；
   2. 由用户从 §1 列表中指定；
-  3. 由 PM AI 在新工作包中评估是否纳入。
+  3. 由 AI 在新评估中评估是否纳入。
 - 关键字部分匹配（>= 2 个候选）：按依赖最深的优先，并显式列出被排除
   的候选。
 - **§4 不适用**：`SC-EDGE-01` 必须修正为此处定义的行为。
@@ -145,18 +145,14 @@ Skill **只有**在以下实质歧义时才请求业务澄清：
 
 ## 8. Critical Output Contract 路由（REQ-035 / WP-017）
 
-当意图属于"关键输出"（即签发 Coder WP / Rework Package / PM-QC Report / Change-Approval / Pending Update 批准 / Human Acceptance）时，路由除匹配本表 §1 工作流外，还必须命中 `references/runtime-compliance-contracts.md` 中的对应契约。
+当意图属于"关键输出"（即变更审批或 Pending Update 批准）时，路由除匹配本表 §1 工作流外，还必须命中 `references/runtime-compliance-contracts.md` 中的对应契约。
 
 ### §8.1 关键输出意图 → 契约映射
 
 | 意图关键词 | 工作流 | 契约 ID |
 |---|---|---|
-| 签发 / 下发 / 派发 工作包 | INIT / APPLY | COC-CWP-001 |
-| 返工 / reissue / rework / R1 | APPLY | COC-RWP-002 |
-| QC / 验收 / 评审 / 抽检 | AUDIT | COC-PQR-003 |
 | 变更 / 改 Scope / 改 Baseline | APPLY | COC-CAR-004 |
 | 批准 / apply PU | APPLY | COC-PUA-005 |
-| Human 验收 / Human 签收 | AUDIT | COC-HAR-006 |
 
 ### §8.2 强制 Pre-send Compliance Gate
 
@@ -168,13 +164,13 @@ Skill **只有**在以下实质歧义时才请求业务澄清：
 
 ### §8.4 短指针授权边界
 
-`one-click-copy` = `完整正文单代码块`；`path-only` 仅在 Human Owner 当前消息显式要求短指针时允许。`简洁` / `赶快` / `一键复制` 均不构成 path-only 授权。
+`one-click-copy` = `完整正文单代码块`；`path-only` 仅在 Project Owner 当前消息显式要求短指针时允许。`简洁` / `赶快` / `一键复制` 均不构成 path-only 授权。
 
 ### §8.5 双字段返回约束（COC 集成，WP-007 / REQ-035）
 
 命中 COC 时，Layer 2 必须同时返回：
 - `workflow_id`（工作流标识符）
-- `contract_id`（契约标识符，如 `COC-CWP-001`、`COC-PUA-005`）
+- `contract_id`（契约标识符，如 `COC-CAR-004`、`COC-PUA-005`）
 
 缺少任一字段时，Layer 3 必须在 Pre-send Compliance Gate 返回 `Escalation: coc-missing-workflow-or-contract`。
 此约束由 `command-and-approval-rules.md` §7 强制定义。

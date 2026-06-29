@@ -164,7 +164,7 @@
   1. 输出 `Escalation: stage-plan-missing`；
   2. 写入 `PM_GAP_ANALYSIS.md` 编号 `GAP-STG-###`；
   3. 在 `PM_PENDING_UPDATES.md` 编号 `PU-STG-###` 提议生成 Stage Plan；
-  4. 不补全 Stage Plan 内容（必须由用户/PM AI 批准后生成）。
+  4. 不补全 Stage Plan 内容（必须由 Project Owner 批准后生成）。
 - **Allow**: 写 Gap 与 PU。
 - **Forbid**: 不得自动补全 Stage Plan 内容。
 - **Evidence**: `00_PM_MEMORY/PM_GAP_ANALYSIS.md`、`00_PM_MEMORY/PM_PENDING_UPDATES.md`。
@@ -754,146 +754,7 @@
   不得重复执行原工作流（PU 内容不变）。
 - **Evidence**: 00_PM_MEMORY/PM_PENDING_UPDATES.md、00_PM_MEMORY/PM_ACTIVE_CONTEXT.md。
 
-## 43. Coder Work Package 双输出失败关闭
-
-- **ID**: SC-COC-01
-- **Framework**: PMO + runtime-compliance-contracts
-- **Given**: PM AI 签发 WP-### 给 Coder；COC-CWP-001 契约的 `required_chat_delivery` 为 `full-body-single-codeblock`。
-- **When**: Coder 在聊天中仅提供 WP-### 文件路径，未发送完整正文。
-- **Then**:
-  1. Pre-send Compliance Gate 第 5 步（聊天交付模式）检测到非 `full-body-single-codeblock`；
-  2. Pre-send Compliance Gate 失败；Coder 不得声明 `issued`；
-  3. Coder 写入 `00_PM_MEMORY/PM_GAP_ANALYSIS.md`：GAP-COC-001 `dual-output-failed`；
-  4. Coder 重新发送完整 WP-### 正文于单个代码块后再次走门禁；
-  5. 双渠道（文件 + 聊天）均成功后门禁 PASS，方可输出 `issued`。
-- **Allow**: 写 Gap；重新发送完整正文；记录失败原因。
-- **Forbid**: 不得在 chat 缺全文时输出 `issued` / `accepted` / `complete` / `done` / `finished`；
-  不得跳过第 5 步或第 6 步（规范化一致性）；不得用 path-only 替代 full body。
-- **Evidence**: 00_PM_MEMORY/PM_GAP_ANALYSIS.md、文件落盘路径 + 行数、聊天代码块 hash。
-
-## 44. Rework Package QC-F 引用缺失关闭
-
-- **ID**: SC-COC-02
-- **Framework**: PMO + runtime-compliance-contracts
-- **Given**: QC 报告 QC-### 包含 3 个 QC-F（QC-F-001、QC-F-002、QC-F-003）；
-  PM AI 签发 WP-###-R1，但 `scope_in` 仅引用 2 个 QC-F。
-- **When**: Coder 接收返工包并执行 Pre-send Compliance Gate。
-- **Then**:
-  1. Gate 第 3 步（必需章节完整）发现 `scope_in` 缺 QC-F 引用；
-  2. Gate 失败；Coder 不得执行工作包正文；
-  3. Coder 写入 Gap：GAP-COC-002 `contract-field-missing`；
-  4. Coder 请求 PM AI 补齐 scope_in 中的 QC-F-### 引用后再次走门禁。
-- **Allow**: 写 Gap；请求 PM AI 补齐；不执行工作包。
-- **Forbid**: 不得在 QC-F 引用缺失时输出 `issued`；
-  不得猜测 QC-F 含义并自行补全；不得跨过 Gate 第 3 步。
-- **Evidence**: 00_PM_MEMORY/PM_GAP_ANALYSIS.md、QC-###.md 路径、WP-###-R1.md 路径。
-
-## 45. PM/QC Report 阻断发现证据缺失关闭
-
-- **ID**: SC-COC-03
-- **Framework**: PMO + runtime-compliance-contracts
-- **Given**: PM/QC 评审 WP-### 后拟写 QC 报告，阻断发现表存在 1 条 ID `QC-F-###`；
-  但证据列（PM 独立证据 / 文件路径 / 退出码）为空。
-- **When**: PM AI 输出 QC 报告。
-- **Then**:
-  1. Gate 第 3 步（必需章节完整）发现阻断发现证据列缺失；
-  2. Gate 失败；PM AI 不得输出 `accepted` 或 `PM/QC Accepted：是`；
-  3. PM AI 写入 Gap：GAP-COC-003 `contract-field-missing`；
-  4. PM AI 补齐证据列（PM 独立执行的命令、文件路径、真实退出码）后再次走门禁。
-- **Allow**: 写 Gap；补齐证据列；记录失败原因。
-- **Forbid**: 不得在证据列缺失时输出 `accepted`；
-  不得用"已人工核验"代替结构化证据；不得用"通过"代替"PM/QC Accepted：是"。
-- **Evidence**: 00_PM_MEMORY/PM_GAP_ANALYSIS.md、PM 独立执行的命令输出、文件路径 + 行数。
-
-## 46. Change Request 风险评估缺失关闭
-
-- **ID**: SC-COC-04
-- **Framework**: PMO + runtime-compliance-contracts
-- **Given**: 用户提出 REQ-### 加入 Sprint 的变更请求；
-  COC-CAR-004 契约的 `required_sections` 包含影响范围和风险评估。
-- **When**: PM AI 处理该变更请求。
-- **Then**:
-  1. Gate 第 3 步（必需章节完整）发现请求缺影响范围和风险评估；
-  2. Gate 失败；PM AI 不得输出 `approved` 或写入 Change Log；
-  3. PM AI 写入 Gap：GAP-COC-004 `contract-field-missing`；
-  4. PM AI 要求用户补充影响范围（Scope / WBS / RAID / Sprint）和风险 ID（R-###）后再次走门禁。
-- **Allow**: 写 Gap；请求用户补齐；记录失败原因。
-- **Forbid**: 不得在缺影响范围时直接写 Change Log；
-  不得以"小调整"为由跳过 PU；不得在缺风险评估时输出 `approved`。
-- **Evidence**: 00_PM_MEMORY/PM_GAP_ANALYSIS.md、用户原始请求、PM AI 询问消息。
-
-## 47. Pending Update 变更前/后 diff 缺失关闭
-
-- **ID**: SC-COC-05
-- **Framework**: PMO + runtime-compliance-contracts
-- **Given**: Skill 生成 PU-### 修改 `00_PM_MEMORY/PM_SCOPE_BASELINE.md`；
-  COC-PUA-005 契约的 `required_sections` 包含变更前内容 / 变更后内容。
-- **When**: PM AI 请求用户批准 PU-###。
-- **Then**:
-  1. Gate 第 3 步（必需章节完整）发现变更前/后 diff 缺失；
-  2. Gate 失败；PM AI 不得输出 `pending-approval-ready`；
-  3. PM AI 写入 Gap：GAP-COC-005 `contract-field-missing`；
-  4. PM AI 重新计算变更前/后 hash 并写入 PU 条目后再次走门禁。
-- **Allow**: 写 Gap；重新计算 hash；记录失败原因。
-- **Forbid**: 不得以"按之前惯例"代替显式 diff；
-  不得在缺 hash 对比时输出 `pending-approval-ready`；不得将 Proposed 状态省略为"已申请"。
-- **Evidence**: 00_PM_MEMORY/PM_GAP_ANALYSIS.md、PU-### 编号、变更前/后 hash 对比。
-
-## 48. Human Acceptance Request 失败升级路径缺失关闭
-
-- **ID**: SC-COC-06
-- **Framework**: PMO + runtime-compliance-contracts
-- **Given**: WP-### + QC-### 全部通过；PM AI 拟发 Human Acceptance Request；
-  COC-HAR-006 契约的 `required_sections` 包含失败升级路径。
-- **When**: PM AI 输出 Human Acceptance Request。
-- **Then**:
-  1. Gate 第 3 步（必需章节完整）发现失败升级路径缺失；
-  2. Gate 失败；PM AI 不得写入 `PM_APPROVAL_STATUS.md` Human Pending 条目；
-  3. PM AI 不得输出 `human-pending`；
-  4. PM AI 写入 Gap：GAP-COC-006 `contract-field-missing`；
-  5. PM AI 补齐失败升级路径（L1/L2/L3/L4 触发条件）后再次走门禁。
-- **Allow**: 写 Gap；补齐升级路径；记录失败原因。
-- **Forbid**: 不得以"Coder+PM 通过"代替 Human 验收请求；
-  不得省略失败升级路径；不得以"等待 Human 确认"代替明确验收请求。
-- **Evidence**: 00_PM_MEMORY/PM_GAP_ANALYSIS.md、PM_APPROVAL_STATUS.md 路径、五层验收状态表。
-
-## 49. "一键复制"非授权 short pointer 拒绝
-
-- **ID**: SC-COC-07
-- **Framework**: PMO + runtime-compliance-contracts
-- **Given**: Human Owner 消息："把 WP-017 一键复制给我"；
-  "一键复制" 不属于 path-only 授权（按 `runtime-compliance-contracts.md` §2 三种非授权表达）。
-- **When**: PM AI 收到该消息并尝试 path-only 响应。
-- **Then**:
-  1. Pre-send Compliance Gate 第 5 步检测到 `required_chat_delivery` = `full-body-single-codeblock`，
-     但消息含"一键复制"非授权表达；
-  2. Gate 失败；PM AI 不得仅给路径；
-  3. PM AI 不得以"已 issued"或"已发送"状态声明完成；
-  4. PM AI 输出完整 WP-017 正文于单个代码块后再次走门禁。
-- **Allow**: 输出完整正文于单个代码块；记录非授权表达。
-- **Forbid**: 不得在非授权表达下使用 path-only；
-  不得将"一键复制"解释为 short pointer 授权；
-  不得跳过 Gate 第 5 步以图快。
-- **Evidence**: 聊天代码块 hash、`[Delivery Gate] PASS` 证据、Human Owner 原始消息引用。
-
-## 50. 错误成功状态禁止
-
-- **ID**: SC-COC-08
-- **Framework**: PMO + runtime-compliance-contracts
-- **Given**: WP-### 的 Pre-send Compliance Gate 失败（任一步骤不通过）；
-  错误成功状态包括：`issued` / `accepted` / `complete` / `done` / `finished`。
-- **When**: Coder 或 PM AI 试图在 Gate FAIL 时输出上述任一状态。
-- **Then**:
-  1. Skill 检测到上述状态与 Gate FAIL 同时出现；
-  2. Skill 立即写入 Gap：GAP-COC-008 `forbidden-success-state`；
-  3. Skill 不得保留该状态声明；必须以 `[Delivery Gate] FAIL: <reason>` 替代；
-  4. Skill 不得发送制品；必须先修复缺项再走门禁。
-- **Allow**: 写 Gap；清除错误成功状态；记录失败原因。
-- **Forbid**: 不得在 Gate FAIL 时输出 `issued` / `accepted` / `complete` / `done` / `finished`；
-  不得用"已发送"等含糊表达替代；不得"乐观声明"以避免尴尬。
-- **Evidence**: 00_PM_MEMORY/PM_GAP_ANALYSIS.md、Gate FAIL 原因、修复后的 Gate PASS 证据。
-
-## 51. 精确重放：六字段匹配返回既有结果
+## 43. 精确重放：六字段匹配返回既有结果
 
 - **ID**: SC-EI-01
 - **Framework**: execution-integrity
@@ -912,7 +773,7 @@
   不得仅凭自然语言相似度判定重复。
 - **Evidence**: `execution_id` 匹配记录、既有结果引用、`last_seen_at` 更新记录。
 
-## 52. 重复材料：source_fingerprint 相同但非同一次到达
+## 44. 重复材料：source_fingerprint 相同但非同一次到达
 
 - **ID**: SC-EI-02
 - **Framework**: execution-integrity
@@ -930,7 +791,7 @@
   不得在两次到达间合并事实（意图不同则结论可能不同）。
 - **Evidence**: 两份 `execution_id` + `source_fingerprint` 对照、旧材料 `superseded` 标记。
 
-## 53. 批准 PU 重放：approval_binding 相同，内容未变
+## 45. 批准 PU 重放：approval_binding 相同，内容未变
 
 - **ID**: SC-EI-03
 - **Framework**: execution-integrity
@@ -948,18 +809,18 @@
   不得静默忽略重放的 PU。
 - **Evidence**: `approval_binding` 匹配记录、`content_fingerprint` 验证记录、既有结果引用。
 
-## 54. 内容变化后旧批准：新 fingerprint 必须新 PU
+## 46. 内容变化后旧批准：新 fingerprint 必须新 PU
 
 - **ID**: SC-EI-04
 - **Framework**: execution-integrity
 - **Given**: PU-### 已批准（`content_fingerprint`=`def456`）；
-  Human Owner 修改了 PU 内容（SHA-256 → `ghi789`），但 PU 编号仍为 PU-###。
+  Project Owner 修改了 PU 内容（SHA-256 → `ghi789`），但 PU 编号仍为 PU-###。
 - **When**: Skill 收到修改内容后的 PU-###（`approval_binding`=`abc123`，`content_fingerprint`=`ghi789`）。
 - **Then**:
   1. Skill 检测到 `content_fingerprint` 变化；
   2. 原 PU-###（`def456`）保持 `Approved` 状态，不变；
   3. 生成新 PU 编号 PU-###-NEW（全新编号，不继承 PU-###）；
-  4. PU-###-NEW 状态为 `Proposed`，需要 Human Owner 重新审批；
+  4. PU-###-NEW 状态为 `Proposed`，需要 Project Owner 重新审批；
   5. Skill 不得使用旧批准（`def456`）应用新内容（`ghi789`）。
 - **Allow**: 生成新 PU-###-NEW；请求重新审批。
 - **Forbid**: 不得用旧批准（`def456`）应用新内容；
@@ -967,7 +828,7 @@
   不得跳过新 PU 的审批流程。
 - **Evidence**: `content_fingerprint` 变化记录、PU-### 状态保持 `Approved` 记录、PU-###-NEW 新编号分配记录。
 
-## 55. 写入前失败：preflight 失败
+## 47. 写入前失败：preflight 失败
 
 - **ID**: SC-EI-05
 - **Framework**: execution-integrity
@@ -988,7 +849,7 @@
   不得跳过冲突报告。
 - **Evidence**: preflight 失败记录、目标冲突列表、`PM_GAP_ANALYSIS.md` Gap 写入记录、拆分 PU 生成记录。
 
-## 56. 单文件写入后失败：部分成功进入 recovery_required
+## 48. 单文件写入后失败：部分成功进入 recovery_required
 
 - **ID**: SC-EI-06
 - **Framework**: execution-integrity
@@ -1011,7 +872,7 @@
   不得用未完成的写入作为最终报告。
 - **Evidence**: 五类证据记录（固化在 Active Context）、`PM_GAP_ANALYSIS.md` Gap 记录。
 
-## 57. Markdown 成功 JSON 失败：只能 Markdown → JSON 修复
+## 49. Markdown 成功 JSON 失败：只能 Markdown → JSON 修复
 
 - **ID**: SC-EI-07
 - **Framework**: execution-integrity
@@ -1032,7 +893,7 @@
   不得跳过同步不一致报告。
 - **Evidence**: 冲突字段对比记录、Markdown → JSON 修复记录、同步操作日志、一致性验证记录。
 
-## 58. 恢复再次中断：从新检查点继续或回滚
+## 50. 恢复再次中断：从新检查点继续或回滚
 
 - **ID**: SC-EI-08
 - **Framework**: execution-integrity
@@ -1053,7 +914,7 @@
   不得报告整体成功。
 - **Evidence**: Active Context 中更新后的五类证据、`last_durable_checkpoint` 保持 `WP-TEST.md` SHA-256。
 
-## 59. 冲突重复：六字段不匹配但意图冲突
+## 51. 冲突重复：六字段不匹配但意图冲突
 
 - **ID**: SC-EI-09
 - **Framework**: execution-integrity
@@ -1066,7 +927,7 @@
   2. 输出 `Conflict: fact-conflict`（4 类：事实/范围/决策/进度冲突）；
   3. 写入 `PM_GAP_ANALYSIS.md`：`GAP-CONFLICT-EI-01`；
   4. 列出冲突字段的具体值对比；
-  5. 请求 L1 澄清（Human Owner 决定哪个事实优先）。
+  5. 请求 L1 澄清（Project Owner 决定哪个事实优先）。
 - **Allow**: 记录冲突；写入 Gap；请求 L1 澄清。
 - **Forbid**: 不得将相似输入自动合并为同一事实；
   不得静默选择其中一个继续执行；
@@ -1074,7 +935,7 @@
   不得在冲突未解决时输出 `issued` / `accepted`。
 - **Evidence**: 两份执行标识对比、冲突字段列表、`PM_GAP_ANALYSIS.md` Gap 写入记录。
 
-## 60. 成功后重复到达：返回既有结果引用
+## 52. 成功后重复到达：返回既有结果引用
 
 - **ID**: SC-EI-10
 - **Framework**: execution-integrity
@@ -1099,7 +960,7 @@
 
 ---
 
-## 61. C-01：同一对象状态冲突（Decision 矛盾）
+## 53. C-01：同一对象状态冲突（Decision 矛盾）
 
 - **ID**: SC-CHX-01
 - **Framework**: PMO + conflict-and-chaos-rules
@@ -1111,7 +972,7 @@
   3. 写入 `PM_GAP_ANALYSIS.md` → `GAP-CFL-061`；
   4. 两份来源均保留，注明冲突；
   5. 输出 `Escalation: state-conflict`；
-  6. 请求 Human Owner 裁定 DEC-037 最终状态。
+  6. 请求 Project Owner 裁定 DEC-037 最终状态。
 - **Allow**: 写 Gap；请求 L1 裁定；保留两份来源。
 - **Forbid**: 不得自动选择其中一方；不得将冲突条目写入 Approved Baseline；
   不得输出 `issued` / `accepted` / `complete`。
@@ -1119,7 +980,7 @@
 
 ---
 
-## 62. C-02：范围 / 需求冲突（需求描述矛盾）
+## 54. C-02：范围 / 需求冲突（需求描述矛盾）
 
 - **ID**: SC-CHX-02
 - **Framework**: PMO + conflict-and-chaos-rules
@@ -1139,27 +1000,27 @@
 
 ---
 
-## 63. C-03：审批状态冲突（Human Owner 声称未批准）
+## 55. C-03：审批状态冲突（Project Owner 声称未批准）
 
 - **ID**: SC-CHX-03
 - **Framework**: PMO + conflict-and-chaos-rules
-- **Given**: `PM_PENDING_UPDATES.md` 中 PU-015 状态为 `Approved`（含审批时间戳）；Human Owner 声称"我没有批准过 PU-015"。
+- **Given**: `PM_PENDING_UPDATES.md` 中 PU-015 状态为 `Approved`（含审批时间戳）；Project Owner 声称"我没有批准过 PU-015"。
 - **When**: Skill 路由到 `APPLY`，尝试应用 PU-015。
 - **Then**:
-  1. 检测到 PU-015 审批状态冲突（记录为 `Approved` vs Human Owner 声称未批准）；
+  1. 检测到 PU-015 审批状态冲突（记录为 `Approved` vs Project Owner 声称未批准）；
   2. 进入 `Conflict: approval-conflict`（C-03）；
   3. 写入 `PM_GAP_ANALYSIS.md` → `GAP-CFL-063`；
   4. 写入 `PM_RAID_LOG.md` → `R-2026-063`，标 `approval-integrity-risk`；
   5. 拒绝应用 PU-015，直至冲突解决；
   6. 输出 `Escalation: approval-conflict`。
-- **Allow**: 写 Gap + RAID；请求 Human Owner 提供审批证据或重新审批。
-- **Forbid**: 不得在冲突未解决时应用 PU-015；不得将 Human Owner 声称作为推翻记录的依据；
+- **Allow**: 写 Gap + RAID；请求 Project Owner 提供审批证据或重新审批。
+- **Forbid**: 不得在冲突未解决时应用 PU-015；不得将 Project Owner 声称作为推翻记录的依据；
   不得删除 `Approved` 记录。
 - **Evidence**: `PM_PENDING_UPDATES.md`、`PM_GAP_ANALYSIS.md`、`PM_RAID_LOG.md`。
 
 ---
 
-## 64. C-04：Markdown / JSON 事实冲突（JSON 较新但 Markdown 缺失）
+## 56. C-04：Markdown / JSON 事实冲突（JSON 较新但 Markdown 缺失）
 
 - **ID**: SC-CHX-04
 - **Framework**: PMO + conflict-and-chaos-rules
@@ -1171,15 +1032,15 @@
   3. 写入 `PM_GAP_ANALYSIS.md` → `GAP-SYN-064`；
   4. 不得从 JSON 重建 Markdown 事实；
   5. 不得将 JSON 的 `In Progress` 状态升为 Approved Baseline 事实；
-  6. 请求 Human Owner 提供 REQ-042 的 Markdown 源文件。
-- **Allow**: 写 Gap；请求 Human Owner 提供 Markdown 源。
+  6. 请求 Project Owner 提供 REQ-042 的 Markdown 源文件。
+- **Allow**: 写 Gap；请求 Project Owner 提供 Markdown 源。
 - **Forbid**: 不得从 JSON 重建 Markdown；不得将 JSON 较新值作为正式事实；
   不得用 JSON 覆盖 Approved Baseline。
 - **Evidence**: `07_DATA/project_state.json`、`PM_GAP_ANALYSIS.md`、`PM_REQUIREMENTS_REGISTER.md`。
 
 ---
 
-## 65. M-01：缺 Owner（Issue 无 owner）
+## 57. M-01：缺 Owner（Issue 无 owner）
 
 - **ID**: SC-CHX-05
 - **Framework**: PMO + conflict-and-chaos-rules
@@ -1197,7 +1058,7 @@
 
 ---
 
-## 66. M-02：缺 Due Date（Milestone 无日期）
+## 58. M-02：缺 Due Date（Milestone 无日期）
 
 - **ID**: SC-CHX-06
 - **Framework**: PMO + conflict-and-chaos-rules
@@ -1214,7 +1075,7 @@
 
 ---
 
-## 67. M-03：缺来源（推断无来源标注）
+## 59. M-03：缺来源（推断无来源标注）
 
 - **ID**: SC-CHX-07
 - **Framework**: PMO + fact-layers + conflict-and-chaos-rules
@@ -1233,7 +1094,7 @@
 
 ---
 
-## 68. N-01/N-02：命名混乱（重复 REQ-ID）
+## 60. N-01/N-02：命名混乱（重复 REQ-ID）
 
 - **ID**: SC-CHX-08
 - **Framework**: PMO + naming-conventions + conflict-and-chaos-rules
@@ -1245,15 +1106,15 @@
   3. 写入 `PM_GAP_ANALYSIS.md` → `GAP-NAM-068`；
   4. 列出两个冲突位置（含文件路径和行号）；
   5. 拒绝基于任一 REQ-019 继续执行正式工作流；
-  6. 请求 Human Owner 裁定。
-- **Allow**: 写 Gap；列出冲突位置；请求 Human Owner 裁定。
+  6. 请求 Project Owner 裁定。
+- **Allow**: 写 Gap；列出冲突位置；请求 Project Owner 裁定。
 - **Forbid**: 不得自动删除或合并重复 ID 条目；不得静默选择其中一个；
   不得用别名覆盖 Approved Baseline ID。
 - **Evidence**: `PM_REQUIREMENTS_REGISTER.md`、`PM_GAP_ANALYSIS.md`.
 
 ---
 
-## 69. N-04/N-05：命名混乱（路径写死 / 跨平台不安全）
+## 61. N-04/N-05：命名混乱（路径写死 / 跨平台不安全）
 
 - **ID**: SC-CHX-09
 - **Framework**: PMO + naming-conventions + conflict-and-chaos-rules
@@ -1272,7 +1133,7 @@
 
 ---
 
-## 70. D-01/D-05：脏工作树写入阻断（无 Git 仓库）
+## 62. D-01/D-05：脏工作树写入阻断（无 Git 仓库）
 
 - **ID**: SC-CHX-10
 - **Framework**: PMO + conflict-and-chaos-rules
@@ -1290,7 +1151,7 @@
   不得跳过 preflight 检查。
 - **Evidence**: `PM_GAP_ANALYSIS.md`、`PM_INPUT_LOG.md`.
 
-## 71. 三层路由成功执行
+## 63. 三层路由成功执行
 
 - **ID**: SC-CMD-01
 - **Framework**: PMO + command-and-approval-rules
@@ -1304,7 +1165,7 @@
 - **Forbid**: Layer 3 未通过时不得写入；不得跳过 Layer 1/2 直接进入 Layer 3。
 - **Evidence**: Active Context 日志、`PM_CURRENT_STATUS.md`。
 
-## 72. unrouted intent 失败关闭
+## 64. unrouted intent 失败关闭
 
 - **ID**: SC-CMD-02
 - **Framework**: PMO
@@ -1312,13 +1173,13 @@
 - **When**: Layer 1 无法将意图映射到已知工作流。
 - **Then**:
   1. 输出 `Gap：unrouted intent`；
-  2. 提供三选项：重新表述、从 §1 指定、PM AI 评估；
+  2. 提供三选项：重新表述、从 §1 指定、Skill 评估；
   3. 停止执行，不自行猜测。
 - **Allow**: 输出 Gap；停止执行。
 - **Forbid**: 自行选择一个工作流继续；输出 accepted/complete/done。
 - **Evidence**: Skill 输出日志。
 
-## 73. 多意图拆分与停止
+## 65. 多意图拆分与停止
 
 - **ID**: SC-CMD-03
 - **Framework**: PMO + PMP/PMBOK
@@ -1332,7 +1193,7 @@
 - **Forbid**: 跳过失败子意图继续后续；输出 accepted/complete。
 - **Evidence**: Active Context 执行日志。
 
-## 74. Scope Baseline 未批准时 INIT 阻断
+## 66. Scope Baseline 未批准时 INIT 阻断
 
 - **ID**: SC-CMD-04
 - **Framework**: PMO + Hybrid
@@ -1347,7 +1208,7 @@
 - **Forbid**: 直接生成 Approved Scope Baseline；跳过 preflight。
 - **Evidence**: Skill 输出日志、`PM_GAP_ANALYSIS.md`。
 
-## 75. PU 审批缺失阻断 APPLY
+## 67. PU 审批缺失阻断 APPLY
 
 - **ID**: SC-CMD-05
 - **Framework**: PMO + PMP/PMBOK
@@ -1355,29 +1216,29 @@
 - **When**: APPLY 工作流检测到 PU 状态为 Proposed（未批准）；Gate 输出 `approval_required`。
 - **Then**:
   1. 输出 `Escalation: approval-required`；
-  2. 列出需要 Human Owner 批准；
+  2. 列出需要 Project Owner 批准；
   3. 不得写入正式文件；
-  4. 等待 Human Owner 审批。
+  4. 等待 Project Owner 审批。
 - **Allow**: 输出审批请求；记录到 PM_PENDING_UPDATES.md。
 - **Forbid**: 跳过审批直接写入 Approved Baseline；直接标记为 Applied。
 - **Evidence**: `PM_PENDING_UPDATES.md`、`PM_APPROVAL_STATUS.md`。
 
-## 76. 角色权限不足阻断变更批准
+## 68. 角色权限不足阻断变更批准
 
 - **ID**: SC-CMD-06
 - **Framework**: PMO
 - **Given**: 用户提出 Scope Baseline 变更（重大变更，跨基线）；Skill 当前默认角色配置中无 Sponsor Approver 签署。
-- **When**: 变更涉及跨基线写入，需要 Sponsor Approver + Human Owner 双签；当前角色配置缺少 Sponsor Approver。
+- **When**: 变更涉及跨基线写入，需要 Sponsor Approver + Project Owner 双签；当前角色配置缺少 Sponsor Approver。
 - **Then**:
   1. 输出 `Escalation: role-insufficient`；
-  2. 列出所需角色：Sponsor Approver + Human Owner；
+  2. 列出所需角色：Sponsor Approver + Project Owner；
   3. 不得跳过角色权限执行变更；
   4. 提示更新 `PM_ROLE_CONFIG.md`。
 - **Allow**: 输出 Gap；记录变更请求到 PM_PENDING_UPDATES.md。
 - **Forbid**: 未经授权角色批准写入 Approved Baseline；跳过角色检查。
 - **Evidence**: `PM_ROLE_CONFIG.md`、`PM_PENDING_UPDATES.md`。
 
-## 77. COC 路由缺失 contract_id 失败关闭
+## 69. COC 路由缺失 contract_id 失败关闭
 
 - **ID**: SC-CMD-07
 - **Framework**: PMO + runtime-compliance-contracts
@@ -1391,7 +1252,7 @@
 - **Forbid**: 缺少 contract_id 时发送关键输出；绕过 Pre-send Gate。
 - **Evidence**: Skill 输出日志、Active Context。
 
-## 78. 脏工作树阻断 APPLY
+## 70. 脏工作树阻断 APPLY
 
 - **ID**: SC-CMD-08
 - **Framework**: PMO + command-and-approval-rules
@@ -1406,7 +1267,7 @@
 - **Forbid**: 在脏工作树时执行写入；自动执行 `git stash`/`git reset`。
 - **Evidence**: Git 状态、`PM_GAP_ANALYSIS.md`。
 
-## 79. 审批状态非法转换：Rejected → Applied 禁止
+## 71. 审批状态非法转换：Rejected → Applied 禁止
 
 - **ID**: SC-CMD-09
 - **Framework**: PMO + command-and-approval-rules
@@ -1421,11 +1282,11 @@
 - **Forbid**: Rejected → Applied 转换；跳过状态机检查。
 - **Evidence**: `PM_PENDING_UPDATES.md`、Skill 输出日志。
 
-## 80. 个人默认角色配置：单人模式通过
+## 72. 个人默认角色配置：单人模式通过
 
 - **ID**: SC-CMD-10
 - **Framework**: PMO + command-and-approval-rules
-- **Given**: 用户是唯一人员；`PM_ROLE_CONFIG.md` 配置单人模式：Human Owner + PM Owner + PM Reviewer + Sponsor Approver 由同一人承担。
+- **Given**: 用户是唯一人员；`PM_ROLE_CONFIG.md` 配置单人模式：Project Owner + PM Owner + PM Reviewer + Sponsor Approver 由同一人承担。
 - **When**: Skill 执行初始化（INIT）并验证角色配置；角色配置支持未来拆分（未写死)。
 - **Then**:
   1. 接受单人角色配置作为当前有效配置；
@@ -1436,7 +1297,7 @@
 - **Forbid**: 将单人配置写死为永久状态；移除 future_split_supported 字段。
 - **Evidence**: `PM_ROLE_CONFIG.md`、`07_DATA/project_roles.json`.
 
-## 81. INIT：空目录项目初始化
+## 73. INIT：空目录项目初始化
 
 - **ID**: SC-WF-01
 - **Framework**: PMO + Hybrid + project-workflow-rules
@@ -1452,7 +1313,7 @@
 - **Forbid**: 生成 Approved Baseline；跳过 Draft 直接生成正式文件。
 - **Evidence**: 生成的 Draft 文件列表；Skill 输出日志。
 
-## 82. INIT：已有 PM 文件时拒绝初始化
+## 74. INIT：已有 PM 文件时拒绝初始化
 
 - **ID**: SC-WF-02
 - **Framework**: PMO + project-workflow-rules
@@ -1466,7 +1327,7 @@
 - **Forbid**: INIT 在已有 PM 文件目录中重新初始化。
 - **Evidence**: Skill 输出日志；目录内容不变。
 
-## 83. INTAKE：可读材料识别需求和 Gap
+## 75. INTAKE：可读材料识别需求和 Gap
 
 - **ID**: SC-WF-03
 - **Framework**: PMP/PMBOK + project-workflow-rules
@@ -1482,7 +1343,7 @@
 - **Forbid**: 直接修改已批准 Scope Baseline；跳过 PU 直接写正式文件；对不可读材料生成虚构内容。
 - **Evidence**: `PM_INPUT_LOG.md`、`PM_RAID_LOG.md`、`PM_GAP_ANALYSIS.md`、`PM_PENDING_UPDATES.md`。
 
-## 84. INTAKE：不可读材料记录为 unreadable
+## 76. INTAKE：不可读材料记录为 unreadable
 
 - **ID**: SC-WF-04
 - **Framework**: PMP/PMBOK + project-workflow-rules
@@ -1497,7 +1358,7 @@
 - **Forbid**: 对不可读材料生成虚构 Action/Risk/Gap。
 - **Evidence**: `PM_INPUT_LOG.md` 条目内容。
 
-## 85. APPLY：Approved PU 原子应用成功
+## 77. APPLY：Approved PU 原子应用成功
 
 - **ID**: SC-WF-05
 - **Framework**: PMO + project-workflow-rules
@@ -1512,7 +1373,7 @@
 - **Forbid**: 跳过 checkpoint；部分应用；应用 Proposed 或 Rejected PU。
 - **Evidence**: Git checkpoint；`PM_PENDING_UPDATES.md` 状态变更记录。
 
-## 86. APPLY：Proposed PU 未批准时拒绝应用
+## 78. APPLY：Proposed PU 未批准时拒绝应用
 
 - **ID**: SC-WF-06
 - **Framework**: PMO + project-workflow-rules
@@ -1520,14 +1381,14 @@
 - **When**: APPLY preflight 检测 PU 状态为 Proposed；`PM_APPROVAL_STATUS.md` 无对应批准记录。
 - **Then**:
   1. 输出 `Escalation: pu-not-approved`；
-  2. 说明 PU 状态为 Proposed，需要 Human Owner 或 Sponsor Approver 审批；
+  2. 说明 PU 状态为 Proposed，需要 Project Owner 或 Sponsor Approver 审批；
   3. 拒绝写入目标文件；
   4. APPLY 退出 `gate_failed`。
 - **Allow**: 审批路径说明；L3 升级建议。
 - **Forbid**: 跳过审批直接应用 Proposed PU。
 - **Evidence**: `PM_PENDING_UPDATES.md`；`PM_APPROVAL_STATUS.md`；Skill 输出日志。
 
-## 87. TAKEOVER P0：识别已有文件、缺失文件、风险和待补信息
+## 79. TAKEOVER P0：识别已有文件、缺失文件、风险和待补信息
 
 - **ID**: SC-WF-07
 - **Framework**: PMO + APM + project-workflow-rules
@@ -1544,7 +1405,7 @@
 - **Forbid**: P0 接管评估阶段写入 Approved Baseline；做完整深度分析（P1）。
 - **Evidence**: `PM_TAKEOVER_ASSESSMENT.md`；`PM_GAP_ANALYSIS.md` Gap 条目。
 
-## 88. TAKEOVER P0：目录为空时识别并建议 INIT
+## 80. TAKEOVER P0：目录为空时识别并建议 INIT
 
 - **ID**: SC-WF-08
 - **Framework**: PMO + project-workflow-rules
@@ -1558,7 +1419,7 @@
 - **Forbid**: 对空目录生成 TAKEOVER 评估。
 - **Evidence**: Skill 输出日志。
 
-## 89. AUDIT P0：Scope 批准状态、未审批变更、逾期 Action、Markdown/JSON 不同步检查
+## 81. AUDIT P0：Scope 批准状态、未审批变更、逾期 Action、Markdown/JSON 不同步检查
 
 - **ID**: SC-WF-09
 - **Framework**: PMO + APM + project-workflow-rules
@@ -1575,7 +1436,7 @@
 - **Forbid**: P0 审计阶段直接修复缺口；生成整改建议（P1）。
 - **Evidence**: `PM_AUDIT_REPORT.md`；`PM_GAP_ANALYSIS.md` Gap 条目。
 
-## 90. AUDIT P0：命名规范检查与 P0/P1 边界声明
+## 82. AUDIT P0：命名规范检查与 P0/P1 边界声明
 
 - **ID**: SC-WF-10
 - **Framework**: PMO + governance + project-workflow-rules
@@ -1590,7 +1451,7 @@
 - **Forbid**: 将 P1 深度审计写成 P0 已实现；直接修复命名违规而不记录。
 - **Evidence**: `PM_AUDIT_REPORT.md` P0/P1 边界声明；命名违规 Gap 条目。
 
-## 91. BRIEFING P0：Daily Briefing 输出 3~5 个建议动作
+## 83. BRIEFING P0：Daily Briefing 输出 3~5 个建议动作
 
 - **ID**: SC-RP-01
 - **Framework**: PMO + PMP/PMBOK + communication-and-reporting-rules
@@ -1606,7 +1467,7 @@
 - **Forbid**: 直接写入正式文件；编造不存在的 Action/Risk/Decision；跳过 Active Context。
 - **Evidence**: Briefing 输出内容；会议建议 7 字段完整性。
 
-## 92. BRIEFING P0：无可用数据时输出空白 Briefing 并标注 Gap
+## 84. BRIEFING P0：无可用数据时输出空白 Briefing 并标注 Gap
 
 - **ID**: SC-RP-02
 - **Framework**: PMO + communication-and-reporting-rules
@@ -1620,7 +1481,7 @@
 - **Forbid**: 编造建议动作；编造待催办/待审批内容。
 - **Evidence**: Briefing Gap 标注内容。
 
-## 93. MEETING P0：Transcript 处理输出五件套且禁止未确认 Decision 进入 Approved
+## 85. MEETING P0：Transcript 处理输出五件套且禁止未确认 Decision 进入 Approved
 
 - **ID**: SC-RP-03
 - **Framework**: PMP/PMBOK + PMO + communication-and-reporting-rules
@@ -1638,7 +1499,7 @@
 - **Forbid**: 未确认 Decision 直接写入 Approved Decision；跳过 PU 直接修改 Scope；为不可读 transcript 生成虚构内容。
 - **Evidence**: 会议纪要；Meeting Index 条目；Action 条目；PU 草案。
 
-## 94. MEETING P0：不可读 Transcript 记录为 unreadable
+## 86. MEETING P0：不可读 Transcript 记录为 unreadable
 
 - **ID**: SC-RP-04
 - **Framework**: PMP/PMBOK + communication-and-reporting-rules
@@ -1652,7 +1513,7 @@
 - **Forbid**: 生成虚构会议纪要；生成虚构 Action/Decision。
 - **Evidence**: `PM_MEETING_INDEX.md` 条目内容。
 
-## 95. TODO P0：To-do 10 字段完整与跨日滚动规则
+## 87. TODO P0：To-do 10 字段完整与跨日滚动规则
 
 - **ID**: SC-RP-05
 - **Framework**: PMP/PMBOK + communication-and-reporting-rules
@@ -1667,7 +1528,7 @@
 - **Forbid**: 跨日自动归档不保留 carry_over_from；跳过 Active Context；编造不存在的 Action。
 - **Evidence**: 今日 To-do 文件；carry_over_from 字段存在性。
 
-## 96. TODO P0：To-do 字段缺失时标注 Gap
+## 88. TODO P0：To-do 字段缺失时标注 Gap
 
 - **ID**: SC-RP-06
 - **Framework**: PMP/PMBOK + communication-and-reporting-rules
@@ -1681,7 +1542,7 @@
 - **Forbid**: 静默填充 `next_step` 为空值；跳过字段验证。
 - **Evidence**: Gap 条目内容。
 
-## 97. REPORT_DAILY P0：日报 Markdown + HTML，缺数据时 fail-closed
+## 89. REPORT_DAILY P0：日报 Markdown + HTML，缺数据时 fail-closed
 
 - **ID**: SC-RP-07
 - **Framework**: PMO + PMP/PMBOK + communication-and-reporting-rules
@@ -1696,7 +1557,7 @@
 - **Forbid**: 编造不存在的 Action/Risk/会议；修改历史日报；自动生成 HTML PPT（除非用户明确要求）。
 - **Evidence**: 日报 Markdown/HTML 内容；来源窗口标注。
 
-## 98. REPORT_DAILY P0：日报无数据时 fail-closed 而非空白编造
+## 90. REPORT_DAILY P0：日报无数据时 fail-closed 而非空白编造
 
 - **ID**: SC-RP-08
 - **Framework**: PMO + communication-and-reporting-rules
@@ -1710,7 +1571,7 @@
 - **Forbid**: 编造已完成工作；用"暂无数据"代替实际内容而不标注 Gap。
 - **Evidence**: Gap 标注；空白模板。
 
-## 99. REPORT_PERIODIC P0：周报 Markdown + HTML + HTML PPT
+## 91. REPORT_PERIODIC P0：周报 Markdown + HTML + HTML PPT
 
 - **ID**: SC-RP-09
 - **Framework**: PMO + PMP/PMBOK + APM + communication-and-reporting-rules
@@ -1726,7 +1587,7 @@
 - **Forbid**: 跳过 HTML PPT 生成；编造 Sprint/Velocity 数据（无 Sprint 数据时）；修改历史日报。
 - **Evidence**: 周报三格式文件；来源窗口；HTML PPT 存在。
 
-## 100. REPORT_PERIODIC P0：月报/管理层汇报 HTML PPT 强制
+## 92. REPORT_PERIODIC P0：月报/管理层汇报 HTML PPT 强制
 
 - **ID**: SC-RP-10
 - **Framework**: PMO + communication-and-reporting-rules
@@ -1740,7 +1601,7 @@
 - **Forbid**: 月报缺 HTML PPT；管理层汇报状态写为 Approved（需 Sponsor Approver）。
 - **Evidence**: 三格式报告文件；受众标注。
 
-## 101. REPORT_STEERING P0：管理层汇报默认 Markdown + HTML + HTML PPT
+## 93. REPORT_STEERING P0：管理层汇报默认 Markdown + HTML + HTML PPT
 
 - **ID**: SC-RP-11
 - **Framework**: PMO + PMP/PMBOK + communication-and-reporting-rules
@@ -1756,7 +1617,7 @@
 - **Forbid**: 管理层汇报状态写为 Approved（须经 Sponsor Approver 审批）；编造 KPI/RAG/里程碑/风险/Action/Decision；使用聊天记忆作为数据来源。
 - **Evidence**: 管理层汇报三格式文件；受众标注；Sponsor Approver 审批状态。
 
-## 102. REPORT P0：报告缺来源 fail-closed，覆盖 Periodic/Steering 无来源或仅聊天记忆
+## 94. REPORT P0：报告缺来源 fail-closed，覆盖 Periodic/Steering 无来源或仅聊天记忆
 
 - **ID**: SC-RP-12
 - **Framework**: PMO + communication-and-reporting-rules
@@ -1771,7 +1632,7 @@
 - **Forbid**: 编造已完成工作；用"暂无数据"代替实际内容而不标注 Gap；跳过 fail-closed 直接输出虚假数据。
 - **Evidence**: Gap 标注内容；空白模板。
 
-## 103. AGILE P0：Product Backlog 条目创建与 Draft → Proposed 流转
+## 95. AGILE P0：Product Backlog 条目创建与 Draft → Proposed 流转
 
 - **ID**: SC-AGDM-01
 - **Framework**: agile-data-model-rules
@@ -1786,7 +1647,7 @@
 - **Forbid**: Draft 条目直接进入 committed Sprint；无 backlog_id；title 为空；priority 为空。
 - **Evidence**: Backlog 条目内容；BL-YYYY-### ID。
 
-## 104. AGILE P0：User Story 缺 Acceptance Criteria → 触发 Gap
+## 96. AGILE P0：User Story 缺 Acceptance Criteria → 触发 Gap
 
 - **ID**: SC-AGDM-02
 - **Framework**: agile-data-model-rules
@@ -1800,7 +1661,7 @@
 - **Forbid**: 无 AC 的 Story 进入 `Ready`；无 AC 的 Story 进入 `Committed`；用自然语言描述替代客观 AC。
 - **Evidence**: Gap 输出内容；Story 状态仍为 `Draft`。
 
-## 105. AGILE P0：User Story 缺 Story Point → 触发 Gap
+## 97. AGILE P0：User Story 缺 Story Point → 触发 Gap
 
 - **ID**: SC-AGDM-03
 - **Framework**: agile-data-model-rules
@@ -1814,7 +1675,7 @@
 - **Forbid**: 无 SP 的 Story 进入 `Committed`；SP 值不在 Fibonacci 序列（1/2/3/5/8/13/21）。
 - **Evidence**: Gap 输出内容；Story story_point 字段为空。
 
-## 106. AGILE P0：Sprint Backlog committed 前 DoR 检查
+## 98. AGILE P0：Sprint Backlog committed 前 DoR 检查
 
 - **ID**: SC-AGDM-04
 - **Framework**: agile-data-model-rules
@@ -1830,7 +1691,7 @@
 - **Forbid**: DoR 未通过的 Story 进入 committed Sprint；将 DoR 检查结果写入 DoD 字段。
 - **Evidence**: DoR checklist 完成状态；PO 签字记录；Escalation 内容。
 
-## 107. AGILE P0：未批准 Scope 条目禁止进入 committed Sprint
+## 99. AGILE P0：未批准 Scope 条目禁止进入 committed Sprint
 
 - **ID**: SC-AGDM-05
 - **Framework**: agile-data-model-rules
@@ -1845,7 +1706,7 @@
 - **Forbid**: 未批准 Story 直接进入 committed；自动修改 Approved Scope；静默忽略冲突。
 - **Evidence**: Backlog 条目状态；Conflict/Gap 内容；PU 建议。
 
-## 108. AGILE P0：Sprint Plan 容量与 committed items 验证
+## 100. AGILE P0：Sprint Plan 容量与 committed items 验证
 
 - **ID**: SC-AGDM-06
 - **Framework**: agile-data-model-rules
@@ -1860,7 +1721,7 @@
 - **Forbid**: `capacity_used` > `capacity_total`；未 PO 批准进入 `Approved`。
 - **Evidence**: Sprint Plan 容量数据；超容数量。
 
-## 109. AGILE P0：Blocked Story aging 升级
+## 101. AGILE P0：Blocked Story aging 升级
 
 - **ID**: SC-AGDM-07
 - **Framework**: agile-data-model-rules
@@ -1875,7 +1736,7 @@
 - **Forbid**: 不记录 blocker_reason 直接 `Resolved`；长期 Blocked 不升级；Blocked SP 计入 Velocity。
 - **Evidence**: Blocked 条目；blocked_date；升级建议内容。
 
-## 110. AGILE P0：Carry-over 必须重新确认
+## 102. AGILE P0：Carry-over 必须重新确认
 
 - **ID**: SC-AGDM-08
 - **Framework**: agile-data-model-rules
@@ -1891,7 +1752,7 @@
 - **Forbid**: 静默滚动（不经 PO 确认进入下一 Sprint）；不重新评估 DoR；carry_reason 为空。
 - **Evidence**: Carry-over 条目内容；po_confirmed 状态；dor_reassessed 状态。
 
-## 111. AGILE P0：DoR / DoD / Acceptance Criteria 不得互换
+## 103. AGILE P0：DoR / DoD / Acceptance Criteria 不得互换
 
 - **ID**: SC-AGDM-09
 - **Framework**: agile-data-model-rules
@@ -1906,7 +1767,7 @@
 - **Forbid**: DoR 检查结果写入 DoD 字段；AC 替代 DoD checklist；跳过 DoD checklist 直接标记 `Done`。
 - **Evidence**: DoR checklist 内容；DoD checklist 内容；Escalation 内容。
 
-## 112. AGILE P0：Markdown 模板与 JSON 目标契约映射
+## 104. AGILE P0：Markdown 模板与 JSON 目标契约映射
 
 - **ID**: SC-AGDM-10
 - **Framework**: agile-data-model-rules
@@ -1921,7 +1782,7 @@
 - **Forbid**: 字段缺失时跳过同步；JSON 覆盖 Markdown 权威源；同步后 Story 字段与 JSON 不一致。
 - **Evidence**: Markdown 条目内容；JSON 输出内容；一致性检查结果。
 
-## 113. AGILE REPORTING P0：Sprint Status 日报敏捷内容
+## 105. AGILE REPORTING P0：Sprint Status 日报敏捷内容
 
 - **ID**: SC-AGR-01
 - **Framework**: agile-reporting-rules
@@ -1936,7 +1797,7 @@
 - **Forbid**: 无 Sprint 数据时输出"趋势正常"；跳过 Sprint Goal Health 评估；编造 completed_SP 数据。
 - **Evidence**: Sprint ID；sprint_goal；completed_SP / committed_SP；Sprint Goal Health 评估结果。
 
-## 114. AGILE REPORTING P0：Burndown 契约 9 字段完整性
+## 106. AGILE REPORTING P0：Burndown 契约 9 字段完整性
 
 - **ID**: SC-AGR-02
 - **Framework**: agile-reporting-rules
@@ -1950,7 +1811,7 @@
 - **Forbid**: 缺少任何 Burndown 契约字段时输出"Burndown 正常"；编造 Burndown 数据。
 - **Evidence**: Burndown 字段存在性检查结果；Gap 内容；Burndown 指标评估。
 
-## 115. AGILE REPORTING P0：Velocity 契约 8 字段完整性
+## 107. AGILE REPORTING P0：Velocity 契约 8 字段完整性
 
 - **ID**: SC-AGR-03
 - **Framework**: agile-reporting-rules
@@ -1964,7 +1825,7 @@
 - **Forbid**: 缺少 Velocity 字段时输出"Velocity 符合预期"；编造 velocity_variance。
 - **Evidence**: Velocity 字段存在性检查结果；variance_reason；Velocity 指标评估。
 
-## 116. AGILE REPORTING P0：Blocked Items Aging 检查与升级
+## 108. AGILE REPORTING P0：Blocked Items Aging 检查与升级
 
 - **ID**: SC-AGR-04
 - **Framework**: agile-reporting-rules
@@ -1979,7 +1840,7 @@
 - **Forbid**: Blocked 项超过 2 工作日不输出 Red 指标；编造 blocked_date。
 - **Evidence**: Blocked Story 列表；aging 计算结果；升级建议内容。
 
-## 117. AGILE REPORTING P0：Carry-over Items and Reason Codes
+## 109. AGILE REPORTING P0：Carry-over Items and Reason Codes
 
 - **ID**: SC-AGR-05
 - **Framework**: agile-reporting-rules
@@ -1994,7 +1855,7 @@
 - **Forbid**: 无 PO 确认的 Carry-over 进入下一 Sprint；无 carry_reason 时跳过；静默滚动。
 - **Evidence**: Carry-over Story 列表；carry_reason；po_confirmed 状态；Gap 内容。
 
-## 118. AGILE REPORTING P0：Scope 冲突检查与 Gap 输出
+## 110. AGILE REPORTING P0：Scope 冲突检查与 Gap 输出
 
 - **ID**: SC-AGR-06
 - **Framework**: agile-reporting-rules
@@ -2011,7 +1872,7 @@
 - **Forbid**: 检测到冲突后自动移除 Story；跳过 Scope 冲突检查；未执行 Scope 冲突检查时声称"无 Scope 冲突"或"未发现冲突"
 - **Evidence**: 冲突 Story 列表；Conflict 内容；Gap 内容；PU 建议。
 
-## 119. AGILE REPORTING P0：日报敏捷内容完整性
+## 111. AGILE REPORTING P0：日报敏捷内容完整性
 
 - **ID**: SC-AGR-07
 - **Framework**: agile-reporting-rules
@@ -2028,7 +1889,7 @@
 - **Forbid**: 缺失 Sprint 数据时输出"一切顺利"；缺失 Burndown 数据时输出"Burndown 正常"。
 - **Evidence**: Sprint 状态内容；Blocked aging 内容；Carry-over 内容；Gap 内容。
 
-## 120. AGILE REPORTING P0：周报/月报敏捷内容完整性
+## 112. AGILE REPORTING P0：周报/月报敏捷内容完整性
 
 - **ID**: SC-AGR-08
 - **Framework**: agile-reporting-rules
@@ -2045,7 +1906,7 @@
 - **Forbid**: 缺失 Velocity 数据时输出"Velocity 符合预期"；跳过 Scope 冲突检查。
 - **Evidence**: Sprint 完成情况；Burndown 趋势；Velocity 趋势；Scope 冲突统计。
 
-## 121. AGILE REPORTING P0：管理层报告敏捷内容完整性
+## 113. AGILE REPORTING P0：管理层报告敏捷内容完整性
 
 - **ID**: SC-AGR-09
 - **Framework**: agile-reporting-rules
@@ -2062,7 +1923,7 @@
 - **Forbid**: 缺失 Sprint 数据时输出"一切正常"；跳过 Scope 冲突检查。
 - **Evidence**: RAG 指标表；Scope Conflict Count；升级建议内容。
 
-## 122. AGILE REPORTING P0：报告 Fail-Closed 与禁止编造
+## 114. AGILE REPORTING P0：报告 Fail-Closed 与禁止编造
 
 - **ID**: SC-AGR-10
 - **Framework**: agile-reporting-rules
@@ -2080,7 +1941,7 @@
 
 ---
 
-## 123. SC-DATA-01：缺少 data file
+## 115. SC-DATA-01：缺少 data file
 - **ID**: SC-DATA-01
 
 - **Given**: `07_DATA/` 目录存在，`scripts/validate-data.js` 已就绪。
@@ -2094,7 +1955,7 @@
 
 ---
 
-## 124. SC-DATA-02：缺少 schema file
+## 116. SC-DATA-02：缺少 schema file
 - **ID**: SC-DATA-02
 
 - **Given**: `07_DATA/actions.json` 存在，`07_DATA/schemas/actions.schema.json` 不存在。
@@ -2108,7 +1969,7 @@
 
 ---
 
-## 125. SC-DATA-03：JSON 语法错误
+## 117. SC-DATA-03：JSON 语法错误
 - **ID**: SC-DATA-03
 
 - **Given**: `07_DATA/actions.json` 存在但包含无效 JSON（如多余逗号）。
@@ -2122,7 +1983,7 @@
 
 ---
 
-## 126. SC-DATA-04：top-level type 错误（数组→对象）
+## 118. SC-DATA-04：top-level type 错误（数组→对象）
 - **ID**: SC-DATA-04
 
 - **Given**: `07_DATA/actions.json` 的 top-level 从 object 改为 array。
@@ -2136,7 +1997,7 @@
 
 ---
 
-## 127. SC-DATA-05：必填字段缺失
+## 119. SC-DATA-05：必填字段缺失
 - **ID**: SC-DATA-05
 
 - **Given**: `07_DATA/actions.json` 中某 action item 缺少 `action_id` 字段。
@@ -2150,7 +2011,7 @@
 
 ---
 
-## 128. SC-DATA-06：状态枚举错误
+## 120. SC-DATA-06：状态枚举错误
 - **ID**: SC-DATA-06
 
 - **Given**: `07_DATA/actions.json` 中某 action 的 `status` 字段写入非法枚举值 `done`（应为 `completed`）。
@@ -2164,7 +2025,7 @@
 
 ---
 
-## 129. SC-DATA-07：Markdown/JSON 权威方向错误
+## 121. SC-DATA-07：Markdown/JSON 权威方向错误
 - **ID**: SC-DATA-07
 
 - **Given**: `json-data-contract-rules.md` 已定义 Markdown→JSON 权威方向。
@@ -2178,7 +2039,7 @@
 
 ---
 
-## 130. SC-DATA-08：schema 孤儿文件
+## 122. SC-DATA-08：schema 孤儿文件
 - **ID**: SC-DATA-08
 
 - **Given**: `07_DATA/schemas/extra.schema.json` 存在但无对应 `07_DATA/extra.json`。
@@ -2192,7 +2053,7 @@
 
 ---
 
-## 131. SC-DATA-09：空数组合法
+## 123. SC-DATA-09：空数组合法
 - **ID**: SC-DATA-09
 
 - **Given**: `07_DATA/actions.json` 内容为 `{"actions":[]}`（空数组）。
@@ -2206,7 +2067,7 @@
 
 ---
 
-## 132. SC-DATA-10：schema 验证脚本 fail-closed
+## 124. SC-DATA-10：schema 验证脚本 fail-closed
 - **ID**: SC-DATA-10
 
 - **Given**: `07_DATA/actions.json` 完全为空（不是合法 JSON）。
@@ -2220,7 +2081,7 @@
 
 ---
 
-## 133. SC-DATA-11：数字范围超限
+## 125. SC-DATA-11：数字范围超限
 - **ID**: SC-DATA-11
 
 - **Given**: `07_DATA/dashboard_state.json` 中 `overall_progress` 写入 150（超出 0~100 范围）。
@@ -2234,7 +2095,7 @@
 
 ---
 
-## 134. SC-DATA-12：JSON 顶层类型为 null
+## 126. SC-DATA-12：JSON 顶层类型为 null
 - **ID**: SC-DATA-12
 
 - **Given**: `07_DATA/actions.json` 内容为 `null`（不是合法 object 或 array）。
@@ -2246,7 +2107,7 @@
 - **Forbid**: 验证器将 `null` 作为合法 top-level type。
 - **Evidence**: type mismatch 错误输出；退出码 1。
 
-## 135. SC-SYNC-01：Markdown → JSON 同步后 schema 验证通过
+## 127. SC-SYNC-01：Markdown → JSON 同步后 schema 验证通过
 
 - **ID**: SC-SYNC-01
 
@@ -2260,7 +2121,7 @@
 - **Forbid**: 同步产生 schema-invalid JSON。
 - **Evidence**: sync-data.js 输出；validate-data.js 通过输出；退出码 0。
 
-## 136. SC-SYNC-02：同步脚本幂等性验证
+## 128. SC-SYNC-02：同步脚本幂等性验证
 
 - **ID**: SC-SYNC-02
 
@@ -2274,7 +2135,7 @@
 - **Forbid**: 第二次 sync 产生对任何 JSON 文件的修改。
 - **Evidence**: 两次 sync 输出对比；`git diff -- 07_DATA/` 输出为空。
 
-## 137. SC-SYNC-03：缺失 Markdown 源时同步跳过
+## 129. SC-SYNC-03：缺失 Markdown 源时同步跳过
 
 - **ID**: SC-SYNC-03
 
@@ -2287,7 +2148,7 @@
 - **Forbid**: sync-data.js 因缺失源文件而退出 1。
 - **Evidence**: sync-data.js 输出包含 "SKIP: documents.json"；退出码 0。
 
-## 138. SC-SYNC-04：schema 缺失时同步 fail-closed
+## 130. SC-SYNC-04：schema 缺失时同步 fail-closed
 
 - **ID**: SC-SYNC-04
 
@@ -2300,7 +2161,7 @@
 - **Forbid**: 脚本在 schema 缺失时仍退出 0。
 - **Evidence**: sync-data.js 错误输出；退出码 1。
 
-## 139. SC-SYNC-05：审计脚本只读性验证
+## 131. SC-SYNC-05：审计脚本只读性验证
 
 - **ID**: SC-SYNC-05
 
@@ -2314,7 +2175,7 @@
 - **Forbid**: 审计产生任何文件写入操作。
 - **Evidence**: `git status -- 07_DATA/` 和 `git status -- 00_PM_MEMORY/` 在审计前后相同；退出码 0。
 
-## 140. SC-SYNC-06：审计发现 Critical 问题后 fail-closed
+## 132. SC-SYNC-06：审计发现 Critical 问题后 fail-closed
 
 - **ID**: SC-SYNC-06
 
@@ -2328,7 +2189,7 @@
 - **Forbid**: 审计在 Critical 问题存在时仍退出 0。
 - **Evidence**: 审计输出包含 Critical 级别问题；退出码 1。
 
-## 141. SC-SYNC-07：Source Map 一致性检查
+## 133. SC-SYNC-07：Source Map 一致性检查
 
 - **ID**: SC-SYNC-07
 
@@ -2342,7 +2203,7 @@
 - **Forbid**: 缺失源被忽略不报告。
 - **Evidence**: 审计输出包含 "MINOR: ... declared source does not exist"。
 
-## 142. SC-SYNC-08：禁止 JSON → Markdown 反向覆盖
+## 134. SC-SYNC-08：禁止 JSON → Markdown 反向覆盖
 
 - **ID**: SC-SYNC-08
 
@@ -2355,7 +2216,7 @@
 - **Forbid**: sync-data.js 修改任何 Markdown 源文件。
 - **Evidence**: `git diff -- 00_PM_MEMORY/` 输出为空；Markdown 文件修改时间未变。
 
-## 143. SC-SYNC-09：禁止后台监听/Watchdog 关键词
+## 135. SC-SYNC-09：禁止后台监听/Watchdog 关键词
 
 - **ID**: SC-SYNC-09
 
@@ -2368,7 +2229,7 @@
 - **Forbid**: 脚本包含任何形式的 watcher、daemon 或 polling 逻辑。
 - **Evidence**: validate-skill.js SI-83 输出 "PASS"。
 
-## 144. SC-SYNC-10：同步脚本使用 Node.js 标准库
+## 136. SC-SYNC-10：同步脚本使用 Node.js 标准库
 
 - **ID**: SC-SYNC-10
 
@@ -2382,7 +2243,7 @@
 - **Forbid**: `require()` 任何 npm 包（如 `axios`、`chalk`、`lodash`）。
 - **Evidence**: validate-skill.js SI-80 输出 "PASS"。
 
-## 145. SC-SYNC-11：未批准 PU 禁止同步
+## 137. SC-SYNC-11：未批准 PU 禁止同步
 
 - **ID**: SC-SYNC-11
 
@@ -2395,7 +2256,7 @@
 - **Forbid**: 将 `Proposed` 状态的 PU 直接写入 `Approved` 或 `Applied`。
 - **Evidence**: approvals.json 中不存在来自未批准 PU 的 Approved/Applied 状态数据。
 
-## 146. SC-SYNC-12：审计摘要字段完整性
+## 138. SC-SYNC-12：审计摘要字段完整性
 
 - **ID**: SC-SYNC-12
 

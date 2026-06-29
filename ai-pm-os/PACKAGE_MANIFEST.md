@@ -47,7 +47,7 @@
 
 | 文件 | 用途 | 包外依赖 |
 |---|---|---|
-| `scenarios/scenarios.md` | 146 个结构化 Given/When/Then/Allow/Forbid/Evidence 场景（60 原 + 10 WP-006 + 10 WP-007 + 10 WP-008 + 12 WP-009 + 10 WP-010 + 10 WP-011 + 12 WP-012 + 12 WP-013 新增） | 无 |
+| `scenarios/scenarios.md` | 138 个结构化 Given/When/Then/Allow/Forbid/Evidence 场景（60 原 + 10 WP-006 + 10 WP-007 + 10 WP-008 + 12 WP-009 + 10 WP-010 + 10 WP-011 + 12 WP-012 + 12 WP-013 新增，8 SC-COC 场景已移除） | 无 |
 
 ### 1.4 包内验证脚本（scripts/）
 

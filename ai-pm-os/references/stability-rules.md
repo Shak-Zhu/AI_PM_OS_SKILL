@@ -126,9 +126,7 @@
 
 - Cursor 与 Codex 必须在相同 shell + 输入 + 状态机下产生结构一致的
   正式制品（不是字节完全一致，是字段集 / 顺序 / 引用一致）。
-- 跨 Agent 差异检测：每月自动跑一次 `scripts/validate-skill.js` + 关键
-  场景回归；启用 AI Coder 委派时，差异登记到 `${GOVERNANCE_ROOT}/pm-ai-reviews/`；
-  未启用时登记到 `00_PM_MEMORY/PM_GAP_ANALYSIS.md`。
+- 跨 Agent 差异检测：每月自动跑一次 `scripts/validate-skill.js` + 关键场景回归；差异登记到 `00_PM_MEMORY/PM_GAP_ANALYSIS.md`。
 
 ## 验收场景覆盖要求
 
@@ -176,7 +174,7 @@
 | 表达 | 是否 path-only 授权 |
 |---|---|
 | `one-click-copy` | 否；`one-click-copy = 完整正文单代码块` |
-| `path-only` 显式声明 | 是；Human Owner 当前消息必须含"只给路径"或"短指针"等明确表达 |
+| `path-only` 显式声明 | 是；Project Owner 当前消息必须含"只给路径"或"短指针"等明确表达 |
 | `简洁` / `赶快` / `一键复制` | 否；三种非授权表达 |
 | `尽快` / `快速` / `简短点` | 否；催促性表达不构成授权 |
 

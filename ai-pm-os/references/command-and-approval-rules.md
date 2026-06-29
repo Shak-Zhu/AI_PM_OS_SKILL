@@ -44,7 +44,7 @@ Layer 3: Gate Evaluation
 |---|---|---|
 | `gate_passed` | 所有前置门均通过；允许进入 Layer 3 后的写入阶段 | writes_started |
 | `gate_failed` | 至少一个强制前置门未通过 | 不得进入 writes_started；不得进入 reported；必须输出 Escalation |
-| `approval_required` | 前置门通过但请求的操作需要 Human Owner 或 Sponsor Approver 审批 | 不得写入正式文件；必须进入 PM_PENDING_UPDATES.md 或等效审批队列 |
+| `approval_required` | 前置门通过但请求的操作需要 Project Owner 或 Sponsor Approver 审批 | 不得写入正式文件；必须进入 PM_PENDING_UPDATES.md 或等效审批队列 |
 | `blocked_by_conflict` | 目标对象存在状态冲突（C-01~C-04）或命名冲突（N-01~N-05） | 不得覆盖任一冲突方；必须进入 PM_GAP_ANALYSIS.md → GAP-CFL-### |
 | `blocked_by_dirty_worktree` | Git 工作树脏（存在未提交变更）且操作涉及跨基线写入 | 不得写入正式文件；必须进入 preflight_blocked；提示用户清理或 checkpoint |
 | `unrouted_intent` | Layer 1 无法将用户意图映射到已知工作流 | 不得自行猜测；必须输出 Gap：unrouted intent 并提供三选项 |
@@ -233,7 +233,6 @@ Layer 3: Gate Evaluation
 | `Rejected` | 已拒绝；不得执行对应变更 | PM_PENDING_UPDATES.md 条目 |
 | `Superseded` | 被更新的 PU/Decision 取代 | 历史记录 |
 | `Applied` | 对应变更已写入正式文件并同步 | PM_PENDING_UPDATES.md 条目 |
-| `Human Accepted` | L1 最终验收完成 | 所有经过 Human Owner 正式接受的文件 |
 | `Parked` | 暂停执行（待澄清或条件满足）| PM_PENDING_UPDATES.md 条目 |
 
 ### 4.2 允许的转换
@@ -242,11 +241,10 @@ Layer 3: Gate Evaluation
 Draft          → Proposed / Parked / Rejected
 Proposed       → Pending Review / Approved / Rejected / Parked
 Pending Review → Approved / Rejected / Parked
-Approved       → Superseded / Applied / Human Accepted / Parked
+Approved       → Superseded / Applied / Parked
 Rejected       → Draft / Proposed（重新起草） / Superseded
 Superseded    → （终态，不允许再转换）
-Applied        → Human Accepted / Parked（若发现质量问题）
-Human Accepted → （终态，文件系统层面可 Parked 但不得回退状态）
+Applied       → Parked（若发现质量问题）
 Parked         → Draft / Proposed / Approved（解除暂停）
 ```
 
@@ -263,7 +261,6 @@ Parked         → Draft / Proposed / Approved（解除暂停）
 | `Superseded` | `Approved` | 已被取代的状态不得复活 |
 | `Proposed` | `Applied` | 必须经过审批（不得跳过审批）|
 | `Pending Review` | `Applied` | 审查中不得直接应用 |
-| `Human Accepted` | `Draft` / `Rejected` | 终态不得回退 |
 | `Parked` | `Applied` | 必须先解除暂停并审批 |
 
 ---
@@ -275,7 +272,7 @@ Parked         → Draft / Proposed / Approved（解除暂停）
 | 角色 ID | 名称 | 典型 Owner 字段 |
 |---|---|---|
 | `ROLE-PM-OWNER` | PM Owner — 项目管理负责人 | PM Owner |
-| `ROLE-HUMAN-OWNER` | Human Owner — 人类最终决策者 | Human Owner |
+| `ROLE-HUMAN-OWNER` | Project Owner — 人类最终决策者 | Project Owner |
 | `ROLE-PM-REVIEWER` | PM Reviewer — PM 质量审查者 | PM Reviewer |
 | `ROLE-SPONSOR-APPROVER` | Sponsor Approver — 发起人/出资人审批者 | Sponsor Approver |
 | `ROLE-PRODUCT-OWNER` | Product Owner — 产品负责人 | Product Owner |
@@ -286,7 +283,7 @@ Parked         → Draft / Proposed / Approved（解除暂停）
 
 ### 5.2 权限矩阵
 
-| 操作 | PM Owner | Human Owner | PM Reviewer | Sponsor Approver | Product Owner | Tech Owner | Business Owner | Agile Owner | UAT Owner |
+| 操作 | PM Owner | Project Owner | PM Reviewer | Sponsor Approver | Product Owner | Tech Owner | Business Owner | Agile Owner | UAT Owner |
 |---|---|---|---|---|---|---|---|---|---|
 | 批准 Scope Baseline | — | Y | — | Y | — | — | — | — | — |
 | 批准 PU（常规）| — | Y | — | — | — | — | — | — | — |
@@ -294,10 +291,8 @@ Parked         → Draft / Proposed / Approved（解除暂停）
 | 批准 Sprint Commit | — | — | — | — | Y | — | — | Y | — |
 | 批准 Story DoD | — | — | — | — | Y | Y | — | Y | — |
 | 签署 DoR | — | — | — | — | Y | — | — | — | — |
-| Human Acceptance（最终 L1）| — | Y | — | — | — | — | — | — | — |
 | UAT Acceptance | — | — | — | — | — | — | — | — | Y |
 | 批准变更（Scope/基线）| — | Y | — | Y | — | — | — | — | — |
-| 签发 Coder WP / Rework | — | Y | Y | — | — | — | — | — | — |
 | 批准 Audit Report | — | Y | — | — | — | — | — | — | — |
 | 接收 Takeover Assessment | — | Y | — | — | — | — | — | — | — |
 
@@ -312,7 +307,7 @@ Parked         → Draft / Proposed / Approved（解除暂停）
 | 默认承担角色 | 原因 |
 |---|---|
 | PM Owner | 发起并管理项目 |
-| Human Owner | 最终人类决策权 |
+| Project Owner | 最终人类决策权 |
 | PM Reviewer | PM 质量自我审查 |
 | Sponsor Approver | 无人更高层级时自批准 |
 
@@ -355,30 +350,18 @@ Parked         → Draft / Proposed / Approved（解除暂停）
 
 | 请求 | 正确行为 |
 |---|---|
-| 任意请求后报告 `accepted` / `complete` / `done` / `finished` | 验证门必须全部通过；未经 Human Acceptance 不得使用这些词 |
+| 任意请求后报告 `accepted` / `complete` / `done` / `finished` | 验证门必须全部通过；未经 Project Owner 明确审批不得使用这些词 |
 | 用户说"简洁"/"赶快"/"一键复制" | 仅当文件已存在且授权明确时允许 path-only；否则拒绝 |
 
 ---
 
-## 7. COC 路由集成
+## 7. COC 路由集成（已废弃）
 
-当路由命中 Critical Output Contract（见 `runtime-compliance-contracts.md`）时，Layer 2 必须同时返回：
+> **COC 路由表已废弃。** 原工作包契约（COB-CWP）、返工契约（COB-RWP）、质量问题契约（COB-PQR）、人工验收契约（COB-HAR）已从 `runtime-compliance-contracts.md` 中删除。
 
-- `workflow_id`（工作流标识符）
-- `contract_id`（COC 契约标识符，如 `COC-CWP-001`、`COC-PUA-005`）
-
-缺少任一字段时，Layer 3 必须在 Pre-send Compliance Gate 返回 `Escalation: coc-missing-workflow-or-contract`。
-
-### 7.1 关键输出 → 契约映射（已存在于 router.md §8.1）
-
-| 意图关键词 | workflow_id | contract_id |
-|---|---|---|
-| 签发/派发工作包 | APPLY | COC-CWP-001 |
-| 返工/Rework | APPLY | COC-RWP-002 |
-| QC/验收/评审 | AUDIT | COC-PQR-003 |
-| 变更/改 Scope/改 Baseline | APPLY | COC-CAR-004 |
-| 批准/apply PU | APPLY | COC-PUA-005 |
-| Human 验收 | AUDIT | COC-HAR-006 |
+关键输出契约仅剩：
+- `COC-CAR-004`（变更审批请求）
+- `COC-PUA-005`（Pending Update 批准请求）
 
 ---
 
@@ -388,7 +371,7 @@ Gate 结果状态与执行状态机（`execution-integrity.md`）的映射说明
 
 - `gate_passed`：允许进入执行状态机的 `preflight_passed` 状态。
 - `gate_failed`：不得进入执行状态机的 `reported` 终态；必须进入 `recovery_required`。
-- `approval_required`：Gate sub-state，等待 Human Owner 审批；不直接映射到执行状态机状态。审批通过后以 `gate_passed` 继续。
+- `approval_required`：Gate sub-state，等待 Project Owner 审批；不直接映射到执行状态机状态。审批通过后以 `gate_passed` 继续。
 - `blocked_by_conflict`：Gate sub-state，冲突未解决前不得进入执行状态机写入阶段；进入 `recovery_required`。
 - `blocked_by_dirty_worktree`：Gate sub-state，Git 工作树未清理前不得进入 `writes_started`；必须输出 Gap。
 - `unrouted_intent`：Gate sub-state，意图无法路由；必须输出 Gap 后以 `recovery_required` 等待用户重新表述。

@@ -240,7 +240,7 @@ REPORT_DAILY 生成当日工作日报，默认 Markdown + HTML 格式。HTML PPT
 ### state_transitions
 
 - 日报输出状态：`Draft`
-- 日报经 Human Owner 审批后状态变更为 `Approved`
+- 日报经 Project Owner 审批后状态变更为 `Approved`
 
 ### failure_escalation
 
@@ -303,7 +303,7 @@ REPORT_PERIODIC 生成周报和月报，默认 Markdown + HTML + HTML PPT 格式
 ### state_transitions
 
 - 报告输出状态：`Draft`
-- 经 Human Owner 审批后状态变更为 `Approved`
+- 经 Project Owner 审批后状态变更为 `Approved`
 
 ### failure_escalation
 

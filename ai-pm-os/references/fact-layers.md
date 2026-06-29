@@ -15,7 +15,7 @@
 | L5 | Gap | 缺失、冲突、未覆盖、不可信证据 | 是（追踪闭环） | `00_PM_MEMORY/PM_GAP_ANALYSIS.md` |
 | L6 | Risk | 尚未发生但可能影响项目 | 是（走 RAID） | `01_PM_DOCUMENTS/PM_RAID_LOG.md` |
 | L7 | Issue | 已经发生且需要处理的问题 | 是（走 RAID） | `01_PM_DOCUMENTS/PM_RAID_LOG.md` |
-| L8 | Decision | 已确认决策（经 Human Owner / Sponsor） | 否（只追加，不修改） | `01_PM_DOCUMENTS/PM_DECISION_LOG.md` |
+| L8 | Decision | 已确认决策（经 Project Owner / Sponsor） | 否（只追加，不修改） | `01_PM_DOCUMENTS/PM_DECISION_LOG.md` |
 
 ## 2. 转换规则
 

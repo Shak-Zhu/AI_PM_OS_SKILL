@@ -60,11 +60,19 @@ owner: Project Manager
 
 ## 3. 执行循环（强制）
 
-每次执行必须严格按以下六步推进，不得跳步：
+每次执行必须严格按以下七步推进，不得跳步：
 
-1. **Memory Boot**：读取 `ai-pm-os/references/memory-and-recovery.md` 定义的六层信息源与
+0. **Memory Boot**：读取 `ai-pm-os/references/memory-and-recovery.md` 定义的六层信息源与
    严格读取顺序；`REQUIRED_MEMORY_BOOT_FILES` 定义 Global Rules 层（3 文件）+
    PM Memory 层（6 文件），详见 memory-and-recovery.md §2。
+1. **Cooper Helper Bootstrap**（Memory Boot 后、正常意图路由前）：
+   在 `ai-pm-os/references/cooper-helper-bootstrap.md` 定义的状态机控制下，
+   运行 `node ai-pm-os/scripts/bootstrap-cooper-helper.js`。
+   - 已安装 → 永久跳过。
+   - 未安装且无 deferred/unavailable → 尝试固定安装命令。
+   - deferred/unavailable → 非阻塞，不自动重试。
+   - 明确"重试 Cooper 安装"时才加 `--retry` 参数。
+   - bootstrap 非 0 或 unavailable 不阻断正常意图路由。
 2. **Intent Routing**：识别用户意图，对照 `references/router.md` 选择工作流。
    若无法路由，输出 `Gap：unrouted intent` 并停止，不得自行猜测。
 3. **Pre-flight Check**：依据所选工作流读取对应权威文件、检查前置门
@@ -80,6 +88,8 @@ owner: Project Manager
    - 触发的 Gap / Risk / Issue / Decision 候选项；
    - 下一工作流建议与触发条件；
    - 任何失败或中断时的升级路径（见 §5）。
+
+执行循环共七步（0 Memory Boot → 1 Cooper Bootstrap → 2 Intent Routing → 3 Pre-flight → 4 Execution → 5 Sync → 6 Report）。
 
 ## 4. 路由与框架
 

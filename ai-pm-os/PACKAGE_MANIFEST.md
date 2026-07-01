@@ -42,6 +42,7 @@
 | `references/project-workflow-rules.md` | INIT/INTAKE/APPLY/TAKEOVER/AUDIT 五个 P0 基础工作流行为契约，含 P0/P1 边界声明 | 无 |
 | `references/communication-and-reporting-rules.md` | BRIEFING/MEETING/TODO/REPORT_DAILY/REPORT_PERIODIC/REPORT_STEERING 六个 P0 专业工作流行为契约，含 9 字段、质量检查、事实来源禁止编造规则 | 无 |
 | `references/install-and-invoke.md` | 安装与调用说明 | 无 |
+| `references/remote-intake-rules.md` | 统一 Intake 运行时行为契约（八种并列输入、失败即停、多 URL 独立处理） | 无 |
 
 ### 1.3 行为场景（scenarios/）
 
@@ -53,9 +54,18 @@
 
 | 文件 | 用途 | 说明 |
 |---|---|---|
-| `scripts/validate-skill.js` | SI-01~SI-85（包含 SI-14b CHG-011 Applicability Gate）机器可验证规则；自包含运行（无外部包依赖）；支持隔离模式（无宿主文件时跳过 AGENTS.md/_AI_GLOBAL_MEMORY/ 检查） | 唯一验证实现 |
+| `scripts/validate-skill.js` | SI-01~SI-88（包含 SI-87 Remote Intake + SI-88 Bootstrap 契约）机器可验证规则；自包含运行（无外部包依赖）；支持隔离模式（无宿主文件时跳过 AGENTS.md/_AI_GLOBAL_MEMORY/ 检查） | 唯一验证实现 |
+| `scripts/bootstrap-cooper-helper.js` | 用户级一次性 Cooper helper bootstrap；用户 home 目录状态；固定安装命令；secret 剥离 | Cooper 辅助安装 |
+| `scripts/bootstrap-cooper-helper.test.js` | 纯离线状态机测试（CB-01~CB-13，含 CB-10 QC-F-270 + CB-13 QC-F-271）；隔离临时 home；注入 runner | 测试套件 |
 
 **注意**：`scripts/check-pollution.js` 不属于包内文件；它是完整项目壳的仓库 QA 适配器，不在独立 Skill 包安装范围内。
+
+### 1.5 辅助文件
+
+|| 文件 | 用途 |
+|---|---|
+| `references/cooper-helper-bootstrap.md` | Cooper helper 安装与重试状态机说明 |
+| `references/remote-intake-rules.md` | 统一 Intake 运行时行为契约 |
 
 ---
 

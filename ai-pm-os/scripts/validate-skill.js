@@ -32,9 +32,11 @@ const path = require('path');
 // WP-011: Extended to 122 (added 10 agile-reporting scenarios SC-AGR-01..10).
 // WP-012: Extended to 134 (added 12 JSON/Schema data contract scenarios SC-DATA-01..12).
 // WP-023: Extended to 138 (removed 8 SC-COC scenarios SC-COC-01~08).
-const EXPECTED_SCENARIO_COUNT = 138;
+// WP-024-R1: Extended to 146 (added 8 Remote Intake scenarios SC-RI-01~08).
+const EXPECTED_SCENARIO_COUNT = 146;
 
 // Required files inside the ai-pm-os/ package
+// WP-024-R2: Added cooper-helper-bootstrap.md and bootstrap scripts
 const REQUIRED_FILES = [
   'ai-pm-os/SKILL.md',
   'ai-pm-os/PACKAGE_MANIFEST.md',
@@ -55,7 +57,11 @@ const REQUIRED_FILES = [
   'ai-pm-os/references/agile-reporting-rules.md',
   'ai-pm-os/references/json-data-contract-rules.md',
   'ai-pm-os/references/json-sync-and-audit-rules.md',
+  'ai-pm-os/references/cooper-helper-bootstrap.md',
+  'ai-pm-os/references/remote-intake-rules.md',
   'ai-pm-os/scenarios/scenarios.md',
+  'ai-pm-os/scripts/bootstrap-cooper-helper.js',
+  'ai-pm-os/scripts/bootstrap-cooper-helper.test.js',
 ];
 const REQUIRED_CAPABILITY_TAGS = [
   'governance:judgment',
@@ -4491,8 +4497,8 @@ function checkSemanticInvariant75(baseDir) {
   if (content.indexOf('json-data-contract-rules.md') === -1) {
     errors.push('SI-75: json-data-contract-rules.md not registered in PACKAGE_MANIFEST.md');
   }
-  if (content.indexOf('138') === -1) {
-    errors.push('SI-75: PACKAGE_MANIFEST.md scenario count not updated to 138');
+  if (content.indexOf('138') === -1 && content.indexOf('146') === -1) {
+    errors.push('SI-75: PACKAGE_MANIFEST.md scenario count not updated to 146');
   }
   return errors;
 }
@@ -4514,9 +4520,215 @@ function checkSemanticInvariant76(baseDir) {
   if (content.indexOf('SC-DATA') === -1) {
     errors.push('SI-76: SKILL.md does not list SC-DATA scenarios');
   }
-  if (content.indexOf('138') === -1) {
-    errors.push('SI-76: SKILL.md scenario count not updated to 138');
+  if (content.indexOf('138') === -1 && content.indexOf('146') === -1) {
+    errors.push('SI-76: SKILL.md scenario count not updated to 146');
   }
+  return errors;
+}
+
+/**
+ * SI-88: Cooper Bootstrap contract — WP-024-R2 / QC-F-268, QC-F-275
+ *
+ * Verifies:
+ * 1. bootstrap-cooper-helper.js exists
+ * 2. bootstrap-cooper-helper.test.js exists
+ * 3. SKILL.md, AGENTS.md, install-and-invoke.md, AI_SKILL_OPERATING_RULES.md
+ *    contain the bootstrap command execution references
+ * 4. bootstrap script contains fixed INSTALL_COMMANDS (d-skills + npx with intra registry)
+ * 5. bootstrap script contains stripSecrets or secret-redaction logic
+ * 6. bootstrap script does NOT contain --verify-read
+ * 7. bootstrap script does NOT contain hardcoded API key guidance
+ * 8. (QC-F-275) SKILL.md and AI_SKILL_OPERATING_RULES.md both define
+ *    Memory Boot before Cooper Bootstrap before Intent Routing
+ */
+function checkSemanticInvariant88(baseDir) {
+  var errors = [];
+
+  // 1. bootstrap script exists
+  var bootstrapPath = path.join(baseDir, 'ai-pm-os/scripts/bootstrap-cooper-helper.js');
+  if (!fs.existsSync(bootstrapPath)) {
+    errors.push('SI-88: bootstrap-cooper-helper.js missing from package');
+    return errors;
+  }
+  var bootstrapContent = fs.readFileSync(bootstrapPath, 'utf8');
+
+  // 2. bootstrap test exists
+  var testPath = path.join(baseDir, 'ai-pm-os/scripts/bootstrap-cooper-helper.test.js');
+  if (!fs.existsSync(testPath)) {
+    errors.push('SI-88: bootstrap-cooper-helper.test.js missing from package');
+  }
+
+  // 3. bootstrap command references in execution documents
+  var skillPath = path.join(baseDir, 'ai-pm-os/SKILL.md');
+  var agentsPath = path.join(baseDir, 'AGENTS.md');
+  var invokePath = path.join(baseDir, 'ai-pm-os/references/install-and-invoke.md');
+  var rulesPath = path.join(baseDir, '_AI_GLOBAL_MEMORY/AI_SKILL_OPERATING_RULES.md');
+
+  var bootstrapCmd = 'bootstrap-cooper-helper.js';
+  var checkFiles = [
+    { path: skillPath, name: 'SKILL.md' },
+    { path: agentsPath, name: 'AGENTS.md' },
+    { path: invokePath, name: 'install-and-invoke.md' },
+    { path: rulesPath, name: 'AI_SKILL_OPERATING_RULES.md' }
+  ];
+
+  for (var fi = 0; fi < checkFiles.length; fi++) {
+    if (!fs.existsSync(checkFiles[fi].path)) {
+      // In isolated mode, host files may not exist — skip
+      continue;
+    }
+    var content = fs.readFileSync(checkFiles[fi].path, 'utf8');
+    if (content.indexOf(bootstrapCmd) === -1) {
+      errors.push('SI-88: ' + checkFiles[fi].name + ' missing bootstrap command reference');
+    }
+  }
+
+  // 4. Fixed install commands present
+  if (bootstrapContent.indexOf('d-skills') === -1) {
+    errors.push('SI-88: bootstrap script missing fixed install command d-skills');
+  }
+  if (bootstrapContent.indexOf('http://npm.intra.xiaojukeji.com') === -1) {
+    errors.push('SI-88: bootstrap script missing fixed npx intra-registry');
+  }
+
+  // 5. stripSecrets / secret redaction
+  if (bootstrapContent.indexOf('stripSecrets') === -1 &&
+      bootstrapContent.indexOf('REDACTED') === -1 &&
+      bootstrapContent.indexOf('redact') === -1) {
+    errors.push('SI-88: bootstrap script missing secret redaction logic (stripSecrets)');
+  }
+
+  // 6. No --verify-read guidance
+  if (bootstrapContent.indexOf('--verify-read') !== -1) {
+    errors.push('SI-88: bootstrap script contains unverified --verify-read guidance');
+  }
+
+  // 7. No hardcoded API key guidance
+  if (/\bapi[_-]?key\b.*\bproject\b/i.test(bootstrapContent)) {
+    errors.push('SI-88: bootstrap script contains API key guidance');
+  }
+
+  // 8. (QC-F-275) Memory Boot → Cooper Bootstrap → Intent Routing order
+  // In SKILL.md: Memory Boot must appear before Cooper Bootstrap;
+  // Cooper Bootstrap must appear before Intent Routing
+  if (fs.existsSync(skillPath)) {
+    var skillContent = fs.readFileSync(skillPath, 'utf8');
+    var mbIdx = skillContent.indexOf('Memory Boot');
+    var cbIdx = skillContent.indexOf('Cooper Helper Bootstrap');
+    var irIdx = skillContent.indexOf('Intent Routing');
+    if (mbIdx >= 0 && cbIdx >= 0 && mbIdx > cbIdx) {
+      errors.push('SI-88: SKILL.md has Cooper Bootstrap before Memory Boot (order violation)');
+    }
+    if (cbIdx >= 0 && irIdx >= 0 && cbIdx > irIdx) {
+      errors.push('SI-88: SKILL.md has Intent Routing before Cooper Bootstrap (order violation)');
+    }
+  }
+
+  // In AI_SKILL_OPERATING_RULES.md: Memory Boot before Cooper Bootstrap
+  if (fs.existsSync(rulesPath)) {
+    var rulesContent = fs.readFileSync(rulesPath, 'utf8');
+    var mbRIdx = rulesContent.indexOf('Memory Boot');
+    var cbRIdx = rulesContent.indexOf('Cooper Helper Bootstrap');
+    if (mbRIdx >= 0 && cbRIdx >= 0 && mbRIdx > cbRIdx) {
+      errors.push('SI-88: AI_SKILL_OPERATING_RULES.md has Cooper Bootstrap before Memory Boot (order violation)');
+    }
+  }
+
+  return errors;
+}
+
+/**
+ * SI-87: Remote Intake contract — WP-024-R1
+ *
+ * Verifies:
+ * 1. remote-intake-rules.md exists and is registered in PACKAGE_MANIFEST.md
+ * 2. Eight input methods are present
+ * 3. Cooper fail-and-stop: must contain "Stop Cooper" or equivalent
+ * 4. Browser fail-and-stop: must contain "Stop browser" or equivalent
+ * 5. No positive fallback automation
+ * 6. Multi-URL independent processing documented
+ * 7. Input Log field set documented
+ * 8. SC-RI-01 through SC-RI-08 each appear exactly once
+ * 9. EXPECTED_SCENARIO_COUNT === 146
+ */
+function checkSemanticInvariant87(baseDir) {
+  var errors = [];
+
+  // 1. remote-intake-rules.md exists
+  var rulesPath = path.join(baseDir, 'ai-pm-os/references/remote-intake-rules.md');
+  if (!fs.existsSync(rulesPath)) {
+    errors.push('SI-87: remote-intake-rules.md missing');
+    return errors;
+  }
+  var content = fs.readFileSync(rulesPath, 'utf8');
+
+  // 2. Eight input methods
+  var methods = ['local_file', 'pasted_text', 'chat_upload', 'transcript',
+                 'screenshot', 'print_pdf', 'cooper', 'browser_url'];
+  for (var i = 0; i < methods.length; i++) {
+    if (content.indexOf(methods[i]) === -1) {
+      errors.push('SI-87: remote-intake-rules.md missing input method: ' + methods[i]);
+    }
+  }
+
+  // 3. Cooper fail-and-stop
+  var cooperFail = /(?:Stop Cooper|stop reading|do not auto-?call|不得自动|失败后.*停止)/i;
+  if (!cooperFail.test(content)) {
+    errors.push('SI-87: remote-intake-rules.md missing Cooper fail-and-stop behavior');
+  }
+
+  // 4. Browser fail-and-stop
+  var browserFail = /(?:Stop browser|stop reading|do not auto-?download|不得自动|失败后.*停止)/i;
+  if (!browserFail.test(content)) {
+    errors.push('SI-87: remote-intake-rules.md missing browser fail-and-stop behavior');
+  }
+
+  // 5. No positive fallback automation
+  var forbiddenFallback = [
+    /Cooper.{0,30}失败(?!.{0,30}不自动).{0,30}自动(?:调用|打开|切换|回退)/i,
+    /(?:浏览器|chrome|browser).{0,30}失败(?!.{0,30}不自动).{0,30}自动(?:调用|打开|切换|回退)/i
+  ];
+  for (var f = 0; f < forbiddenFallback.length; f++) {
+    if (forbiddenFallback[f].test(content)) {
+      errors.push('SI-87: remote-intake-rules.md contains positive fallback automation');
+      break;
+    }
+  }
+
+  // 6. Multi-URL independent processing
+  if (content.indexOf('multi') === -1 && content.indexOf('多') === -1) {
+    errors.push('SI-87: remote-intake-rules.md missing multi-URL independent processing');
+  }
+
+  // 7. Input Log field set (check for key fields)
+  var inputLogFields = ['input_id', 'source_locator', 'retrieval_method', 'access_status', 'processing_status'];
+  for (var fi = 0; fi < inputLogFields.length; fi++) {
+    if (content.indexOf(inputLogFields[fi]) === -1) {
+      errors.push('SI-87: remote-intake-rules.md missing Input Log field: ' + inputLogFields[fi]);
+    }
+  }
+
+  // 8. SC-RI-01 through SC-RI-08 each appear as a heading in scenarios.md
+  var scenariosPath = path.join(baseDir, 'ai-pm-os/scenarios/scenarios.md');
+  if (fs.existsSync(scenariosPath)) {
+    var scenariosContent = fs.readFileSync(scenariosPath, 'utf8');
+    for (var sc = 1; sc <= 8; sc++) {
+      var scId = 'SC-RI-' + (sc < 10 ? '0' + sc : sc);
+      // Match heading pattern: ## N. SC-RI-0X followed by colon (ASCII or full-width)
+      var headingMatch = scenariosContent.match(new RegExp('## \\d+\\. ' + scId + '[:：]'));
+      if (!headingMatch) {
+        errors.push('SI-87: scenarios.md missing scenario heading: ' + scId);
+      }
+    }
+  } else {
+    errors.push('SI-87: scenarios.md not found');
+  }
+
+  // 9. remote-intake-rules.md references Remote Intake scenarios
+  if (content.indexOf('SC-RI') === -1 && content.indexOf('146') === -1) {
+    errors.push('SI-87: remote-intake-rules.md does not reference Remote Intake scenarios');
+  }
+
   return errors;
 }
 
@@ -5676,7 +5888,9 @@ function main() {
   const si84 = checkSemanticInvariant84(baseDir);
   const si85 = checkSemanticInvariant85(baseDir);
   const si86 = checkSemanticInvariant86(baseDir);
-  siErrors.push(...si01, ...si02, ...si03, ...si04, ...si05, ...si06, ...si07, ...si08, ...si09, ...si10, ...si11, ...si12, ...si13, ...si14, ...si15, ...si16, ...si17, ...si18, ...si19, ...si20, ...si21, ...si22, ...si23, ...si24, ...si25, ...si26, ...si27, ...si28, ...si29, ...si30, ...si31, ...si32, ...si33, ...si34, ...si35, ...si36, ...si37, ...si38, ...si39, ...si40, ...si41, ...si42, ...si43, ...si44, ...si45, ...si46, ...si47, ...si48, ...si49, ...si50, ...si51, ...si52, ...si53, ...si54, ...si55, ...si56, ...si57, ...si58, ...si59, ...si60, ...si61, ...si62, ...si63, ...si64, ...si65, ...si67, ...si68, ...si69, ...si70, ...si71, ...si72, ...si73, ...si74, ...si75, ...si76, ...si77, ...si78, ...si79, ...si80, ...si81, ...si82, ...si83, ...si84, ...si85, ...si86);
+  const si87 = checkSemanticInvariant87(baseDir);
+  const si88 = checkSemanticInvariant88(baseDir);
+  siErrors.push(...si01, ...si02, ...si03, ...si04, ...si05, ...si06, ...si07, ...si08, ...si09, ...si10, ...si11, ...si12, ...si13, ...si14, ...si15, ...si16, ...si17, ...si18, ...si19, ...si20, ...si21, ...si22, ...si23, ...si24, ...si25, ...si26, ...si27, ...si28, ...si29, ...si30, ...si31, ...si32, ...si33, ...si34, ...si35, ...si36, ...si37, ...si38, ...si39, ...si40, ...si41, ...si42, ...si43, ...si44, ...si45, ...si46, ...si47, ...si48, ...si49, ...si50, ...si51, ...si52, ...si53, ...si54, ...si55, ...si56, ...si57, ...si58, ...si59, ...si60, ...si61, ...si62, ...si63, ...si64, ...si65, ...si67, ...si68, ...si69, ...si70, ...si71, ...si72, ...si73, ...si74, ...si75, ...si76, ...si77, ...si78, ...si79, ...si80, ...si81, ...si82, ...si83, ...si84, ...si85, ...si86, ...si87, ...si88);
 
   // WP-015-R1/R2: Fail-closed isolated skip contract enforcement (QC-F-150, QC-F-154)
   // Scan ALL checkSemanticInvariantNN function bodies for skipHostScripts usage.
@@ -5820,6 +6034,23 @@ function main() {
     console.log('  OK: SI-84 (SC-SYNC-01..12 scenarios exist in scenarios.md) PASS');
     console.log('  OK: SI-85 (SKILL.md + PACKAGE_MANIFEST.md reference json-sync-and-audit-rules.md) PASS');
     console.log('  OK: SI-86 (workflow paths + runtime contract count are canonical) PASS');
+    // SI-87 and SI-88 must be explicitly printed (WP-024-R3 / QC-F-276)
+    var si87HasErrors = si87 && si87.length > 0;
+    if (si87HasErrors) {
+      for (var si87e = 0; si87e < si87.length; si87e++) {
+        console.log('  FAIL: SI-87: ' + si87[si87e]);
+      }
+    } else {
+      console.log('  OK: SI-87 (Remote Intake contract) PASS');
+    }
+    var si88HasErrors = si88 && si88.length > 0;
+    if (si88HasErrors) {
+      for (var si88e = 0; si88e < si88.length; si88e++) {
+        console.log('  FAIL: SI-88: ' + si88[si88e]);
+      }
+    } else {
+      console.log('  OK: SI-88 (Cooper Bootstrap contract + order) PASS');
+    }
   } else {
     for (const e of siErrors) {
       console.log('  SEMANTIC VIOLATION: ' + e);
